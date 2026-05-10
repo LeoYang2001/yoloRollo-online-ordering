@@ -1,0 +1,117 @@
+import type { Menu } from "../src/types";
+
+/**
+ * Demo menu used when CLOVER_API_TOKEN isn't set — lets you run the
+ * ordering UI locally before hooking up Clover. Replace by setting the
+ * env vars in .env.local (the api/menu route will start pulling from
+ * Clover Inventory automatically).
+ */
+export const MOCK_MENU: Menu = {
+  categories: ["Signature", "Build Your Own", "Drinks"],
+  items: [
+    {
+      id: "sig-strawberry",
+      name: "Strawberry Classic",
+      description: "Fresh strawberry rolled ice cream, graham crumble, drizzle",
+      price: 8.5,
+      category: "Signature",
+      available: true,
+      modifierGroups: [
+        {
+          id: "vessel",
+          name: "Choose your vessel",
+          minSelections: 1,
+          maxSelections: 1,
+          modifiers: [
+            { id: "v-cup", name: "Classic cup", priceDelta: 0, group: "Vessel" },
+            { id: "v-waffle", name: "Waffle bowl", priceDelta: 1.5, group: "Vessel" },
+          ],
+        },
+        {
+          id: "extras",
+          name: "Extra toppings",
+          minSelections: 0,
+          maxSelections: 3,
+          modifiers: [
+            { id: "x-strawberry", name: "Extra strawberries", priceDelta: 0.75, group: "Topping" },
+            { id: "x-condensed", name: "Condensed milk drizzle", priceDelta: 0.5, group: "Topping" },
+            { id: "x-cheesecake", name: "Cheesecake bites", priceDelta: 1.0, group: "Topping" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "sig-cookies",
+      name: "Cookies & Cream",
+      description: "Vanilla base rolled with crushed Oreo, chocolate drizzle, whole Oreo crown",
+      price: 8.5,
+      category: "Signature",
+      available: true,
+      modifierGroups: [
+        {
+          id: "vessel",
+          name: "Choose your vessel",
+          minSelections: 1,
+          maxSelections: 1,
+          modifiers: [
+            { id: "v-cup", name: "Classic cup", priceDelta: 0, group: "Vessel" },
+            { id: "v-waffle", name: "Waffle bowl", priceDelta: 1.5, group: "Vessel" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "byo-roll",
+      name: "Build Your Own Roll",
+      description: "Pick a base, two mix-ins, and three toppings",
+      price: 9.0,
+      category: "Build Your Own",
+      available: true,
+      modifierGroups: [
+        {
+          id: "base",
+          name: "Pick your base",
+          minSelections: 1,
+          maxSelections: 1,
+          modifiers: [
+            { id: "b-vanilla", name: "Vanilla", priceDelta: 0, group: "Base" },
+            { id: "b-chocolate", name: "Chocolate", priceDelta: 0, group: "Base" },
+            { id: "b-matcha", name: "Matcha", priceDelta: 0.5, group: "Base" },
+          ],
+        },
+        {
+          id: "mixins",
+          name: "Mix-ins (pick 2)",
+          minSelections: 2,
+          maxSelections: 2,
+          modifiers: [
+            { id: "m-oreo", name: "Oreo", priceDelta: 0, group: "Mix-in" },
+            { id: "m-strawberry", name: "Strawberry", priceDelta: 0, group: "Mix-in" },
+            { id: "m-banana", name: "Banana", priceDelta: 0, group: "Mix-in" },
+            { id: "m-brownie", name: "Brownie", priceDelta: 0.5, group: "Mix-in" },
+          ],
+        },
+        {
+          id: "toppings",
+          name: "Toppings (up to 3)",
+          minSelections: 0,
+          maxSelections: 3,
+          modifiers: [
+            { id: "t-whip", name: "Whipped cream", priceDelta: 0, group: "Topping" },
+            { id: "t-choc", name: "Chocolate drizzle", priceDelta: 0, group: "Topping" },
+            { id: "t-strawberry", name: "Strawberries", priceDelta: 0.5, group: "Topping" },
+            { id: "t-pocky", name: "Pocky stick", priceDelta: 0.75, group: "Topping" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "drink-water",
+      name: "Bottled Water",
+      price: 2.0,
+      category: "Drinks",
+      available: true,
+      modifierGroups: [],
+    },
+  ],
+};

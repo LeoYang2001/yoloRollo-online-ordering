@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    font-family: "Fredoka", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #fff8f2;
+  }
+}
+
+@layer components {
+  /* Pill-shaped primary call to action — matches the playful Yolo Rollo vibe. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-rollo-pink px-6 py-3 font-semibold text-white shadow-rollo transition active:scale-[0.98] disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-rollo-ink/15 bg-white px-5 py-2.5 font-semibold text-rollo-ink transition hover:border-rollo-pink hover:text-rollo-pink;
+  }
+  .badge-green {
+    @apply inline-flex rounded-full bg-rollo-green/15 px-2.5 py-1 text-xs font-semibold text-rollo-green;
+  }
+  .card {
+    @apply rounded-3xl bg-white p-4 shadow-sm ring-1 ring-rollo-ink/5;
+  }
+}
