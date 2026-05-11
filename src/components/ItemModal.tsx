@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MenuItem, Modifier, ModifierGroup } from "../types";
 import { useCart } from "../lib/cartStore";
+import { flyToCart } from "../lib/flyToCart";
 
 interface Props {
   item: MenuItem;
@@ -17,6 +18,7 @@ export function ItemModal({ item, onClose, layoutId }: Props) {
   const addItem = useCart((s) => s.addItem);
   const [selected, setSelected] = useState<Record<string, Set<string>>>({});
   const [notes, setNotes] = useState("");
+  const heroRef = useRef<HTMLDivElement | null>(null);
 
   const toggle = (group: ModifierGroup, mod: Modifier) => {
     setSelected((prev) => {
@@ -50,6 +52,13 @@ export function ItemModal({ item, onClose, layoutId }: Props) {
   });
 
   const handleAdd = () => {
+    const from = heroRef.current?.getBoundingClientRect();
+    if (from) {
+      flyToCart({
+        from,
+        imageSrc: item.imageUrl,
+      });
+    }
     addItem(item, chosenMods, notes.trim() || undefined);
     onClose();
   };
@@ -86,6 +95,7 @@ export function ItemModal({ item, onClose, layoutId }: Props) {
           </div>
 
           <motion.div
+            ref={heroRef}
             layoutId={layoutId || `arrival-${item.id}`}
             className="mb-4 h-40 overflow-hidden rounded-2xl bg-rollo-pink-soft"
           >

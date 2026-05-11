@@ -1,21 +1,30 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { OrderRequest, OrderResponse } from "../../src/types";
-import { cloverRest, cloverHostedCheckout, isMockMode } from "../_clover";
+import { cloverHostedCheckout, cloverRest, isMockMode } from "../_clover";
 
 /**
  * POST /api/orders/create
  *
- * 1. Creates a Clover order in `open` state with the cart line items.
- * 2. Adds modifiers as line modifications (so they print on the kitchen ticket).
- * 3. Creates a Hosted Checkout session for that order so the customer
- *    can pay with card. Clover redirects the browser to /confirmation/:id
- *    on success.
+ *   1. Create a Clover order in `open` state with the cart line items.
+ *   2. Add modifiers as line modifications so they print on the kitchen
+ *      ticket.
+ *   3. Create a Clover Hosted Checkout session for the order so the
+ *      customer can pay with card / Apple Pay / Google Pay on Clover's
+ *      hosted page.
+ *   4. Return the orderId, a short ticket number, and the checkoutUrl
+ *      the client should redirect to.
  *
- * Returns the Clover order ID, a short ticket number, and the checkout URL.
+ * Clover Hosted Checkout REQUIRES HTTPS redirect URLs. On localhost the
+ * resolved base URL is http://, so we either:
+ *   - Use `process.env.CHECKOUT_BASE_URL` if you've set one (e.g. an
+ *     ngrok HTTPS tunnel), or
+ *   - Fail with a clear 400 telling you to deploy / set the env var.
+ *
+ * On real HTTPS deploys (Vercel preview / prod), the request's own
+ * URL is HTTPS and everything just works.
  */
 
 const ticketNumber = (orderId: string) => {
-  // Last 4 of the Clover ID — short enough to read off the TV screen.
   const tail = orderId.slice(-4).toUpperCase();
   return `R-${tail}`;
 };
@@ -36,32 +45,27 @@ export default async function handler(
     return res.status(400).json({ error: "Cart is empty" });
   }
 
-  // ----- MOCK MODE -----------------------------------------------------
-  // Lets the UI flow be tested before Clover is wired up.
+  const subtotal = body.lines.reduce(
+    (s, l) => s + l.unitPrice * l.quantity,
+    0,
+  );
+  const tax = +(subtotal * 0.0975).toFixed(2);
+  const total = +(subtotal + tax).toFixed(2);
+
+  // Mock mode: keep the UI-only dev path working without Clover credentials.
   if (isMockMode()) {
     const fakeId = `mock_${Date.now()}`;
-    const subtotal = body.lines.reduce(
-      (s, l) => s + l.unitPrice * l.quantity,
-      0,
-    );
-    const tax = +(subtotal * 0.0975).toFixed(2); // Memphis ~9.75%
-    const out: OrderResponse = {
+    return res.status(200).json({
       orderId: fakeId,
       ticketNumber: ticketNumber(fakeId),
-      // In mock mode, send straight to /confirmation so you can see the flow.
       checkoutUrl: `/confirmation/${fakeId}`,
-      totals: {
-        subtotal,
-        tax,
-        total: +(subtotal + tax).toFixed(2),
-      },
-    };
-    return res.status(200).json(out);
+      totals: { subtotal, tax, total },
+    } satisfies OrderResponse);
   }
 
-  // ----- REAL CLOVER ---------------------------------------------------
+  // ─── 1. Create order shell ──────────────────────────────────────────
+  let orderId: string;
   try {
-    // 1. Create order shell
     const order = await cloverRest<{ id: string }>("/orders", {
       method: "POST",
       body: JSON.stringify({
@@ -70,18 +74,23 @@ export default async function handler(
         note: body.notes ?? "",
       }),
     });
+    orderId = order.id;
+  } catch (err) {
+    console.error("[orders/create] order shell failed:", err);
+    return res.status(500).json({
+      error: `Could not create order: ${(err as Error).message}`,
+    });
+  }
 
-    // 2. Add line items
+  // ─── 2. Add line items + modifications ─────────────────────────────
+  try {
     for (const line of body.lines) {
       const li = await cloverRest<{ id: string }>(
-        `/orders/${order.id}/line_items`,
+        `/orders/${orderId}/line_items`,
         {
           method: "POST",
           body: JSON.stringify({
             item: { id: line.itemId },
-            // Clover uses unit price in cents. Use the price the client
-            // computed (which already includes modifier deltas) to defend
-            // against menu drift mid-session.
             price: dollarsToCents(line.unitPrice),
             unitQty: line.quantity,
             note: line.notes,
@@ -89,44 +98,61 @@ export default async function handler(
         },
       );
 
-      // Attach selected modifiers to the line — Clover prints these on
-      // the kitchen ticket so the team knows what to roll.
       for (const mod of line.modifiers) {
-        await cloverRest(`/orders/${order.id}/line_items/${li.id}/modifications`, {
-          method: "POST",
-          body: JSON.stringify({
-            modifier: { id: mod.id },
-            amount: dollarsToCents(mod.priceDelta),
-            name: mod.name,
-          }),
-        }).catch((e) => {
-          // Modifier failures shouldn't block the order — log and continue.
-          console.warn("modification add failed", mod.id, e);
+        await cloverRest(
+          `/orders/${orderId}/line_items/${li.id}/modifications`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              modifier: { id: mod.id },
+              amount: dollarsToCents(mod.priceDelta),
+              name: mod.name,
+            }),
+          },
+        ).catch((e) => {
+          console.warn("[orders/create] modification add failed", mod.id, e);
         });
       }
     }
+  } catch (err) {
+    console.error("[orders/create] line items failed:", err);
+    return res.status(500).json({
+      error: `Could not attach line items: ${(err as Error).message}`,
+      orderId,
+    });
+  }
 
-    // 3. Compute totals (Clover returns total once order is finalized,
-    //    but we want to show the user something now).
-    const subtotal = body.lines.reduce(
-      (s, l) => s + l.unitPrice * l.quantity,
-      0,
-    );
-    const tax = +(subtotal * 0.0975).toFixed(2);
-    const total = +(subtotal + tax).toFixed(2);
+  // ─── 3. Hosted Checkout session ─────────────────────────────────────
+  const explicitBase = process.env.CHECKOUT_BASE_URL?.replace(/\/$/, "");
+  const forwardedProto = req.headers["x-forwarded-proto"] as
+    | string
+    | undefined;
+  const host = req.headers.host ?? "";
+  const proto =
+    forwardedProto ?? (host.includes("localhost") ? "http" : "https");
+  const base = explicitBase ?? `${proto}://${host}`;
 
-    // 4. Hosted Checkout session
-    const proto =
-      (req.headers["x-forwarded-proto"] as string | undefined) ?? "https";
-    const host = req.headers.host;
-    const base = `${proto}://${host}`;
+  if (!base.startsWith("https://")) {
+    return res.status(400).json({
+      error:
+        "Clover Hosted Checkout requires HTTPS for the redirect URLs but " +
+        `the resolved base is "${base}". Options:\n` +
+        "  • Deploy to Vercel preview (npx vercel deploy) and test there\n" +
+        "  • Run `npx ngrok http 3000` and set CHECKOUT_BASE_URL=https://<your-tunnel>.ngrok-free.app in .env.local\n" +
+        "Local order shell was still created (orderId below) so you can " +
+        "see it in Clover Dashboard.",
+      orderId,
+    });
+  }
+
+  let checkoutUrl: string;
+  try {
     const checkout = await cloverHostedCheckout<{
       href: string;
       checkoutSessionId: string;
     }>(
       {
         customer: {
-          email: undefined,
           firstName: body.customerName.split(" ")[0],
           lastName: body.customerName.split(" ").slice(1).join(" "),
           phoneNumber: body.customerPhone,
@@ -144,20 +170,24 @@ export default async function handler(
         },
       },
       {
-        success: `${base}/confirmation/${order.id}`,
+        success: `${base}/confirmation/${orderId}`,
         failure: `${base}/checkout?error=payment_failed`,
       },
     );
-
-    const out: OrderResponse = {
-      orderId: order.id,
-      ticketNumber: ticketNumber(order.id),
-      checkoutUrl: checkout.href,
-      totals: { subtotal, tax, total },
-    };
-    return res.status(200).json(out);
+    checkoutUrl = checkout.href;
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: (err as Error).message });
+    console.error("[orders/create] hosted checkout failed:", err);
+    return res.status(500).json({
+      error: `Could not start payment: ${(err as Error).message}`,
+      orderId,
+    });
   }
+
+  // ─── 4. Done. Client redirects browser to checkoutUrl. ──────────────
+  return res.status(200).json({
+    orderId,
+    ticketNumber: ticketNumber(orderId),
+    checkoutUrl,
+    totals: { subtotal, tax, total },
+  } satisfies OrderResponse);
 }

@@ -11,8 +11,17 @@ async function http<T>(input: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
+    // Try to surface the friendly server error message ({"error":"..."})
+    // before falling back to the raw body / status text.
     const text = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${text || res.statusText}`);
+    let msg = text || res.statusText;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed?.error) msg = parsed.error;
+    } catch {
+      // not JSON; keep raw text
+    }
+    throw new Error(msg);
   }
   return res.json() as Promise<T>;
 }

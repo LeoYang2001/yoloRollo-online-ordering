@@ -28,6 +28,11 @@ export const brand = {
   // Optional: path to logo asset placed in /public.
   // Drop your logo at /public/logo.png and this will pick it up.
   logoSrc: "/logo.png",
+
+  // Memphis local + state sales tax (2025): 9.75%. Used only for the
+  // cart-side estimate. Clover applies the merchant's configured tax at
+  // Hosted Checkout, so the final charge is authoritative regardless.
+  taxRate: 0.0975,
 } as const;
 
 export type Brand = typeof brand;

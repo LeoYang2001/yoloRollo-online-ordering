@@ -54,11 +54,14 @@ export const useCart = create<CartState>()(
 
       setQuantity: (lineId, quantity) =>
         set({
-          lines: get().lines.map((l) =>
-            l.lineId === lineId
-              ? { ...l, quantity: Math.max(1, Math.min(20, quantity)) }
-              : l,
-          ),
+          lines:
+            quantity <= 0
+              ? get().lines.filter((l) => l.lineId !== lineId)
+              : get().lines.map((l) =>
+                  l.lineId === lineId
+                    ? { ...l, quantity: Math.min(20, quantity) }
+                    : l,
+                ),
         }),
 
       clear: () => set({ lines: [] }),

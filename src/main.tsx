@@ -8,6 +8,7 @@ import { Menu } from "./pages/Menu";
 import { Cart } from "./pages/Cart";
 import { Checkout } from "./pages/Checkout";
 import { Confirmation } from "./pages/Confirmation";
+import { MockCheckout } from "./pages/MockCheckout";
 import { TVDisplay } from "./pages/TVDisplay";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

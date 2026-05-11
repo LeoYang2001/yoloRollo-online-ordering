@@ -137,17 +137,23 @@ ENABLE_ONLINE = [
 ]
 
 # Modifier group attachments. Map item name → list of modifier group names.
+#
+# Note: Mix-in and Topping are CUSTOMER-FACING modifier groups (the website
+# exposes them so customers can swap/add). Sub Mix-in and Sub Topping are
+# in-store-only swap helpers — they have the same options but get filtered
+# out by /api/menu so customers don't see them; the POS does. Cashier uses
+# them for cleaner "this is a swap, not an addition" ticket semantics.
 ATTACH = {
-    # Yolo Signatures: Sub Topping only (no mix swap on these)
-    "Yolo Signature — Waffle Bowl Classic":      ["Sub Topping"],
-    "Yolo Signature — Strawberry Crumble":       ["Sub Topping"],
-    # Signature Rolls: Sub Mix-in + Sub Topping (employees can swap)
-    "Signature Roll #1 — Cookies & Cream":       ["Sub Mix-in", "Sub Topping"],
-    "Signature Roll #2 — Strawberry Cheesecake": ["Sub Mix-in", "Sub Topping"],
-    "Signature Roll #3 — Choco Oreo":            ["Sub Mix-in", "Sub Topping"],
-    "Signature Roll #4 — Mango Strawberry":      ["Sub Mix-in", "Sub Topping"],
-    "Signature Roll #5 — Coconut M&M":           ["Sub Mix-in", "Sub Topping"],
-    "Signature Roll #6 — Vanilla Cheesecake":    ["Sub Mix-in", "Sub Topping"],
+    # Yolo Signatures: customer picks mix-in / topping; cashier has Sub Topping
+    "Yolo Signature — Waffle Bowl Classic":      ["Mix-in", "Topping", "Sub Topping"],
+    "Yolo Signature — Strawberry Crumble":       ["Mix-in", "Topping", "Sub Topping"],
+    # Signature Rolls: customer modifies mix-in/topping; cashier still has Sub
+    "Signature Roll #1 — Cookies & Cream":       ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
+    "Signature Roll #2 — Strawberry Cheesecake": ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
+    "Signature Roll #3 — Choco Oreo":            ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
+    "Signature Roll #4 — Mango Strawberry":      ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
+    "Signature Roll #5 — Coconut M&M":           ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
+    "Signature Roll #6 — Vanilla Cheesecake":    ["Mix-in", "Topping", "Sub Mix-in", "Sub Topping"],
     # Bubble teas: Boba (renamed BUBBLE)
     "Strawberry Bubble Tea": ["Boba"],
     "Mango Bubble Tea":      ["Boba"],

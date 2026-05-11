@@ -7,10 +7,11 @@
  */
 
 const REGION_HOSTS: Record<string, { rest: string; ecomm: string }> = {
-  // Production North America
+  // Production North America. Ecommerce (charges, hosted checkout)
+  // lives on the scl.* hostname, not the main REST host.
   us: {
     rest: "https://api.clover.com",
-    ecomm: "https://api.clover.com",
+    ecomm: "https://scl.clover.com",
   },
   // Developer sandbox
   sandbox: {
@@ -102,4 +103,66 @@ export async function cloverHostedCheckout<T>(
     throw new Error(`Clover Hosted Checkout ${res.status}: ${text}`);
   }
   return res.json() as Promise<T>;
+}
+
+/**
+ * Clover Ecommerce Charges API — turns a token (from Clover.js
+ * `clover.createToken()`) into an actual charge against the customer's
+ * card. The token represents a payment method only; this call moves
+ * the money.
+ *
+ *   POST {ecomm}/v1/charges
+ *   Authorization: Bearer {CLOVER_ECOMM_PRIVATE_KEY}
+ *
+ * Docs: https://docs.clover.com/reference/createcharge
+ */
+export interface CloverChargeResult {
+  id: string;
+  amount: number; // cents
+  currency: string;
+  status: "succeeded" | "pending" | "failed";
+  paid: boolean;
+  source?: { id?: string; brand?: string; last4?: string };
+  // ...there are more fields; we only consume the ones above
+}
+
+export async function cloverCharge(input: {
+  /** Card token from Clover.js. */
+  source: string;
+  /** Amount in cents. */
+  amount: number;
+  /** Lowercase ISO-4217 code; almost always "usd". */
+  currency?: string;
+  /** Short human-readable description shown on the customer's statement. */
+  description?: string;
+  /** Set true to capture immediately. We almost always want this. */
+  capture?: boolean;
+}): Promise<CloverChargeResult> {
+  const { ecomm, ecommPrivateKey, merchantId } = cloverConfig();
+  if (!ecommPrivateKey) {
+    throw new Error("CLOVER_ECOMM_PRIVATE_KEY is not set");
+  }
+  const url = `${ecomm}/v1/charges`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "X-Clover-Merchant-Id": merchantId,
+      Authorization: `Bearer ${ecommPrivateKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      source: input.source,
+      amount: input.amount,
+      currency: input.currency ?? "usd",
+      description: input.description,
+      capture: input.capture ?? true,
+      ecomind: "ecom",
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Clover Charge ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<CloverChargeResult>;
 }

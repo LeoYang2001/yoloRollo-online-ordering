@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
+import { FloatingCart } from "./components/FloatingCart";
+import { FlyToCartLayer } from "./components/FlyToCartLayer";
 
 /**
  * Top-level layout for the customer ordering flow. The /tv route bypasses
@@ -9,6 +11,10 @@ import { Header } from "./components/Header";
 export default function App() {
   const location = useLocation();
   const isWelcomePage = location.pathname === "/";
+  // /menu wants the full viewport so its inner panels can split the screen
+  // and the carousel can collapse as the bottom panel scrolls. Drop the
+  // outer bottom padding for that route so nothing pushes us past 100dvh.
+  const isMenuPage = location.pathname === "/menu";
 
   return (
     <div className="relative min-h-full overflow-hidden bg-[#ffd8e5]/45">
@@ -19,7 +25,11 @@ export default function App() {
       {!isWelcomePage && <Header />}
       <main
         className={
-          isWelcomePage ? "min-h-screen" : "mx-auto max-w-2xl px-4 pb-32 pt-4"
+          isWelcomePage
+            ? "min-h-screen"
+            : isMenuPage
+              ? "mx-auto max-w-2xl px-4 pt-2"
+              : "mx-auto max-w-2xl px-4 pb-32 pt-4"
         }
       >
         <AnimatePresence mode="popLayout">
@@ -34,6 +44,10 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Floating cart button + the layer that animates items into it. */}
+      <FloatingCart />
+      <FlyToCartLayer />
     </div>
   );
 }

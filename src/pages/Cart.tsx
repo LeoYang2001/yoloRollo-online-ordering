@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "../lib/cartStore";
+import { brand } from "../config/brand";
 
 export function Cart() {
   const lines = useCart((s) => s.lines);
@@ -8,6 +9,12 @@ export function Cart() {
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
   const navigate = useNavigate();
+
+  // Cart is pickup-only, so we don't show a delivery line. Tax is shown
+  // as a local estimate using the merchant's configured rate; Clover
+  // re-calculates the precise tax during Hosted Checkout.
+  const taxEstimate = +(subtotal * brand.taxRate).toFixed(2);
+  const total = +(subtotal + taxEstimate).toFixed(2);
 
   if (lines.length === 0) {
     return (
@@ -103,26 +110,27 @@ export function Cart() {
         transition={{ delay: 0.04, duration: 0.2, ease: "easeOut" }}
         className="mt-6 rounded-3xl bg-white p-4 shadow-sm"
       >
-        <div className="flex items-baseline justify-between border-b border-rollo-ink/10 pb-2">
+        <div className="flex items-baseline justify-between">
           <span className="text-rollo-ink/70">Subtotal</span>
           <span className="font-semibold">${subtotal.toFixed(2)}</span>
         </div>
         <div className="mt-2 flex items-baseline justify-between text-sm">
-          <span className="text-rollo-ink/55">Delivery Charge</span>
-          <span className="font-semibold text-rollo-green">Free</span>
-        </div>
-        <div className="mt-1 flex items-baseline justify-between text-sm">
-          <span className="text-rollo-ink/55">Discount</span>
-          <span className="font-semibold text-rollo-pink">$0.00</span>
+          <span className="text-rollo-ink/55">
+            Tax{" "}
+            <span className="text-rollo-ink/40">
+              (est. {(brand.taxRate * 100).toFixed(2)}%)
+            </span>
+          </span>
+          <span className="font-semibold">${taxEstimate.toFixed(2)}</span>
         </div>
         <div className="mt-2 flex items-baseline justify-between border-t border-rollo-ink/10 pt-2">
           <span className="font-semibold">Total</span>
           <span className="text-lg font-bold text-rollo-pink">
-            ${subtotal.toFixed(2)}
+            ${total.toFixed(2)}
           </span>
         </div>
         <p className="mt-1 text-xs text-rollo-ink/50">
-          Tax calculated at checkout. In-store pickup at {"Wolfchase"}.
+          In-store pickup at {brand.location}. Final tax confirmed at payment.
         </p>
         <button
           className="btn-primary mt-4 w-full"

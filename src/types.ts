@@ -54,6 +54,13 @@ export interface OrderRequest {
   customerPhone: string;  // SMS pickup-ready alerts
   notes?: string;
   lines: CartLine[];
+  /**
+   * Card token from Clover.js `clover.createToken()`. When present, the
+   * server uses Clover's Ecommerce Charges API to charge the card and
+   * link the payment to the created order. Omit for pay-at-pickup or
+   * Hosted Checkout flows.
+   */
+  paymentToken?: string;
 }
 
 export interface OrderResponse {

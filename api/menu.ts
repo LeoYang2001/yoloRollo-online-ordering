@@ -38,6 +38,38 @@ interface CIModifierGroup {
 
 const cents = (c?: number) => Math.round(c ?? 0) / 100;
 
+// ─────────────────────────────────────────────────────────────
+// Customer-facing categories.
+// We collapse every Clover category into one of these four; anything
+// that doesn't map (Gift card, Extra Topping, Hot Drinks…) is hidden
+// from the website. Update CATEGORY_MAP to bucket new Clover categories.
+// Order here is the order the tabs render in.
+// ─────────────────────────────────────────────────────────────
+const CUSTOMER_CATEGORIES = [
+  "Rolled Ice Cream",
+  "Bubble Tea",
+  "Smoothie",
+  "Cold Drinks",
+] as const;
+
+type CustomerCategory = (typeof CUSTOMER_CATEGORIES)[number];
+
+const CATEGORY_MAP: Record<string, CustomerCategory> = {
+  // Rolled Ice Cream bucket — Specials and any small-roll items roll up here
+  "rolled ice cream": "Rolled Ice Cream",
+  specials: "Rolled Ice Cream",
+  "small roll ice cream": "Rolled Ice Cream",
+  // Drinks
+  "bubble tea": "Bubble Tea",
+  smoothie: "Smoothie",
+  "cold drinks": "Cold Drinks",
+};
+
+function mapCategory(rawName: string | undefined): CustomerCategory | null {
+  if (!rawName) return null;
+  return CATEGORY_MAP[rawName.trim().toLowerCase()] ?? null;
+}
+
 export default async function handler(
   _req: VercelRequest,
   res: VercelResponse,
@@ -49,9 +81,9 @@ export default async function handler(
     "public, s-maxage=60, stale-while-revalidate=300",
   );
 
-  // if (isMockMode()) {
-  //   return res.status(200).json(MOCK_MENU);
-  // }
+  if (isMockMode()) {
+    return res.status(200).json(MOCK_MENU);
+  }
 
   try {
     // 1. Items with their attached modifier groups & categories
@@ -67,13 +99,24 @@ export default async function handler(
     const groupById = new Map<string, CIModifierGroup>();
     for (const g of groupsResp.elements) groupById.set(g.id, g);
 
-    const categories = new Set<string>();
+    const categoriesFound = new Set<CustomerCategory>();
 
     const items: MenuItem[] = itemsResp.elements
       .filter((i) => !i.hidden)
-      .map((i) => {
-        const cat = i.categories?.elements?.[0]?.name?.trim() || "Menu";
-        categories.add(cat);
+      .flatMap((i): MenuItem[] => {
+        // Try every category attached to the item — pick the first one that
+        // maps to a customer-facing bucket. If none map, drop the item.
+        const rawCats = i.categories?.elements ?? [];
+        let cat: CustomerCategory | null = null;
+        for (const c of rawCats) {
+          const mapped = mapCategory(c.name);
+          if (mapped) {
+            cat = mapped;
+            break;
+          }
+        }
+        if (!cat) return [];
+        categoriesFound.add(cat);
 
         // Modifier groups whose name starts with "Sub " are in-store-only
         // substitution helpers (e.g. "Sub Mix-in" lets a cashier swap a
@@ -111,18 +154,20 @@ export default async function handler(
             })
             .filter((g) => !isInStoreOnly(g.name)) ?? [];
 
-        return {
+        return [{
           id: i.id,
           name: i.name,
           price: cents(i.price),
           category: cat,
           available: i.available !== false,
           modifierGroups: modGroups,
-        };
+        }];
       });
 
+    // Emit categories in the canonical order, only including ones that
+    // actually have items.
     const menu: Menu = {
-      categories: Array.from(categories),
+      categories: CUSTOMER_CATEGORIES.filter((c) => categoriesFound.has(c)),
       items,
     };
     return res.status(200).json(menu);
