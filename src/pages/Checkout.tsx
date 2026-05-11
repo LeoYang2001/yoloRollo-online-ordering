@@ -31,6 +31,7 @@ export function Checkout() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export function Checkout() {
       const order = await api.createOrder({
         customerName: name.trim(),
         customerPhone: phone.trim(),
+        customerEmail: email.trim() || undefined,
         notes: notes.trim() || undefined,
         lines,
         // No paymentToken — server creates a Hosted Checkout session.
@@ -131,6 +133,27 @@ export function Checkout() {
           />
           <span className="mt-1 block text-xs text-rollo-ink/50">
             Used for SMS pickup alert. Standard rates apply.
+          </span>
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-semibold">
+            Email{" "}
+            <span className="text-rollo-ink/50">
+              (recommended for Apple Pay)
+            </span>
+          </span>
+          <input
+            type="email"
+            inputMode="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 w-full rounded-2xl border-2 border-rollo-ink/10 bg-white p-3 focus:border-rollo-pink focus:outline-none"
+            autoComplete="email"
+          />
+          <span className="mt-1 block text-xs text-rollo-ink/50">
+            Optional. Skips the “add contact info” prompt on the payment page.
           </span>
         </label>
 

@@ -52,6 +52,7 @@ export interface CartLine {
 export interface OrderRequest {
   customerName: string;
   customerPhone: string;  // SMS pickup-ready alerts
+  customerEmail?: string; // Helps Apple/Google Pay skip the contact-info prompt
   notes?: string;
   lines: CartLine[];
   /**

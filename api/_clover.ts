@@ -6,17 +6,26 @@
  * Docs: https://docs.clover.com/docs/welcome-to-the-rest-api
  */
 
-const REGION_HOSTS: Record<string, { rest: string; ecomm: string }> = {
-  // Production North America. Ecommerce (charges, hosted checkout)
-  // lives on the scl.* hostname, not the main REST host.
+// Clover splits its services across different hostnames in production.
+//   - rest:    /v3/merchants/{mId}/... endpoints (inventory, orders, etc.)
+//   - ecomm:   /v1/charges (Ecommerce Charges API)
+//   - checkout: /invoicingcheckoutservice/v1/checkouts (Hosted Checkout)
+//
+// In sandbox they're all the same host. In production they diverge:
+//   checkout lives on api.clover.com, charges on scl.clover.com.
+const REGION_HOSTS: Record<
+  string,
+  { rest: string; ecomm: string; checkout: string }
+> = {
   us: {
     rest: "https://api.clover.com",
     ecomm: "https://scl.clover.com",
+    checkout: "https://api.clover.com",
   },
-  // Developer sandbox
   sandbox: {
     rest: "https://apisandbox.dev.clover.com",
     ecomm: "https://scl-sandbox.dev.clover.com",
+    checkout: "https://scl-sandbox.dev.clover.com",
   },
 };
 
@@ -42,6 +51,7 @@ export function cloverConfig() {
     region,
     rest: hosts.rest,
     ecomm: hosts.ecomm,
+    checkout: hosts.checkout,
     merchantId: env("CLOVER_MERCHANT_ID"),
     token: env("CLOVER_API_TOKEN"),
     ecommPrivateKey: env("CLOVER_ECOMM_PRIVATE_KEY", ""),
@@ -83,8 +93,8 @@ export async function cloverHostedCheckout<T>(
   body: object,
   redirectUrls: { success: string; failure: string },
 ): Promise<T> {
-  const { ecomm, ecommPrivateKey } = cloverConfig();
-  const url = `${ecomm}/invoicingcheckoutservice/v1/checkouts`;
+  const { checkout, ecommPrivateKey } = cloverConfig();
+  const url = `${checkout}/invoicingcheckoutservice/v1/checkouts`;
   const res = await fetch(url, {
     method: "POST",
     headers: {

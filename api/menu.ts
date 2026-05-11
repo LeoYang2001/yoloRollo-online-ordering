@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { Menu, MenuItem, ModifierGroup } from "../src/types";
-import { cloverRest, isMockMode } from "./_clover";
-import { MOCK_MENU } from "./_mockMenu";
+import { cloverRest, isMockMode } from "./_clover.js";
+import { MOCK_MENU } from "./_mockMenu.js";
 
 /**
  * GET /api/menu

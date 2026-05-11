@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { OrderRequest, OrderResponse } from "../../src/types";
-import { cloverHostedCheckout, cloverRest, isMockMode } from "../_clover";
+import { cloverHostedCheckout, cloverRest, isMockMode } from "../_clover.js";
 
 /**
  * POST /api/orders/create
@@ -152,10 +152,19 @@ export default async function handler(
       checkoutSessionId: string;
     }>(
       {
+        // NOTE: We intentionally do NOT pass `customer.phoneNumber` here.
+        // When Hosted Checkout sees a phoneNumber it flags the session as
+        // a "contact" session, which causes Apple Pay's payment sheet to
+        // request `requiredShippingContactFields` and prompts the user to
+        // "Update shipping contact". We already capture the phone in our
+        // own form for SMS pickup — Clover doesn't need it.
+        //
+        // We DO pass email when available because that lets Apple Pay /
+        // Google Pay skip the "add contact info" prompt entirely.
         customer: {
           firstName: body.customerName.split(" ")[0],
           lastName: body.customerName.split(" ").slice(1).join(" "),
-          phoneNumber: body.customerPhone,
+          email: body.customerEmail,
         },
         shoppingCart: {
           lineItems: body.lines.map((l) => ({
@@ -167,6 +176,17 @@ export default async function handler(
                 .filter(Boolean)
                 .join(" — ") || undefined,
           })),
+          // Hint to Clover that this is a pickup order — no shipping.
+          // Setting shippingAmount: 0 also keeps the order summary tidy.
+          shippingAmount: 0,
+        },
+        // Free-form tags Clover stores on the session. We use it as an
+        // extra signal that this is a pickup order. Visible in Clover
+        // dashboard under the order's metadata.
+        merchantMetadata: {
+          fulfillment: "pickup",
+          source: "yolo-rollo-web",
+          customerPhone: body.customerPhone,
         },
       },
       {

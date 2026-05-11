@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { OrderStatus } from "../../../src/types";
-import { cloverRest, isMockMode } from "../../_clover";
+import { cloverRest, isMockMode } from "../../_clover.js";
 
 /**
  * GET /api/orders/:orderId/status
