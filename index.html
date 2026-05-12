@@ -2,9 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      maximum-scale=1 + user-scalable=no disables pinch-zoom and the
+      iOS "double-tap to zoom" behavior. This keeps the menu/cart UI
+      locked to its designed layout on mobile — important because we
+      use sticky headers, a fixed floating cart, and dvh-based heights
+      that get visibly broken when the user zooms.
+    -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="theme-color" content="#EC1E79" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -20,6 +27,18 @@
       name="description"
       content="Fresh. Fun. Rolled. Order Yolo Rollo Ice Cream online for in-store pickup at Wolfchase, Memphis."
     />
+    <!--
+      Clover.js SDK — exposes window.Clover so we can build inline card
+      iframes + tokenize Apple Pay / Google Pay payloads. Loaded async to
+      not block first paint; src/lib/clover.ts waits for it before use.
+      Sandbox uses checkout.sandbox.dev.clover.com; production uses
+      checkout.clover.com. We'll point to prod since CLOVER_REGION=us.
+    -->
+    <script
+      src="https://checkout.clover.com/sdk.js"
+      async
+      data-yolo-clover-sdk
+    ></script>
   </head>
   <body class="bg-rollo-pink-soft text-rollo-ink">
     <div id="root"></div>

@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { OrderRequest, OrderResponse } from "../../src/types";
-import { cloverHostedCheckout, cloverRest, isMockMode } from "../_clover.js";
+import {
+  cloverCharge,
+  cloverHostedCheckout,
+  cloverRest,
+  isMockMode,
+} from "../_clover.js";
 
 /**
  * POST /api/orders/create
@@ -122,7 +127,64 @@ export default async function handler(
     });
   }
 
-  // ─── 3. Hosted Checkout session ─────────────────────────────────────
+  // ─── 3a. Inline charge path (Path B) ───────────────────────────────
+  // When the client sends a paymentToken (from Clover.js card form OR
+  // from Apple Pay / Google Pay), we charge directly via the Ecommerce
+  // Charges API and skip Hosted Checkout entirely. This is the path
+  // that fixes the Apple Pay shipping-prompt issue, because we control
+  // the W3C PaymentRequest options on the client (requestShipping:false).
+  if (body.paymentToken) {
+    try {
+      const charge = await cloverCharge({
+        source: body.paymentToken,
+        amount: dollarsToCents(total),
+        currency: "usd",
+        description: `Yolo Rollo · ${ticketNumber(orderId)}`,
+        capture: true,
+      });
+      if (charge.status !== "succeeded" || !charge.paid) {
+        return res.status(402).json({
+          error: `Payment ${charge.status}. Please try a different card.`,
+          orderId,
+        });
+      }
+      // Tag the order so it shows as PAID in Clover Dashboard. We do
+      // this best-effort — even if it fails, the money already moved
+      // and the kitchen can pull the ticket up by ID.
+      await cloverRest(`/orders/${orderId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          paymentState: "PAID",
+          note: body.notes
+            ? `${body.notes} — paid online (${charge.id})`
+            : `paid online (${charge.id})`,
+        }),
+      }).catch((e) => {
+        console.warn("[orders/create] order PAID tag failed:", e);
+      });
+
+      return res.status(200).json({
+        orderId,
+        ticketNumber: ticketNumber(orderId),
+        // Empty checkoutUrl signals to the client: no redirect needed,
+        // payment is already done — just navigate to /confirmation.
+        checkoutUrl: `/confirmation/${orderId}`,
+        totals: { subtotal, tax, total },
+      } satisfies OrderResponse);
+    } catch (err) {
+      console.error("[orders/create] inline charge failed:", err);
+      return res.status(500).json({
+        error: `Could not charge card: ${(err as Error).message}`,
+        orderId,
+      });
+    }
+  }
+
+  // ─── 3b. Hosted Checkout fallback ──────────────────────────────────
+  // No paymentToken → customer wants the redirect-to-Clover flow. This
+  // still has the Apple Pay shipping prompt on Clover's hosted page,
+  // but we keep it as a safety net for browsers/devices that can't run
+  // the inline path (very old browsers, no W3C PaymentRequest, etc.).
   const explicitBase = process.env.CHECKOUT_BASE_URL?.replace(/\/$/, "");
   const forwardedProto = req.headers["x-forwarded-proto"] as
     | string
@@ -152,18 +214,20 @@ export default async function handler(
       checkoutSessionId: string;
     }>(
       {
-        // NOTE: We intentionally do NOT pass `customer.phoneNumber` here.
-        // When Hosted Checkout sees a phoneNumber it flags the session as
-        // a "contact" session, which causes Apple Pay's payment sheet to
-        // request `requiredShippingContactFields` and prompts the user to
-        // "Update shipping contact". We already capture the phone in our
-        // own form for SMS pickup — Clover doesn't need it.
-        //
-        // We DO pass email when available because that lets Apple Pay /
-        // Google Pay skip the "add contact info" prompt entirely.
+        // Clover Hosted Checkout REQUIRES a non-null `customer` block
+        // (returns "Customer can't be null" otherwise). We pass the
+        // minimum that satisfies the API while not triggering Apple Pay's
+        // shipping-contact prompt:
+        //   - firstName / lastName / email are accepted "soft" fields
+        //   - phoneNumber is OMITTED — that's the field that tipped Apple
+        //     Pay into requiring requiredShippingContactFields.
+        // (Even with this minimal customer block the Apple Pay shipping
+        // prompt may still appear — that's a Clover-side default we
+        // can't override from the request body. Card payment works fine
+        // either way; Apple Pay UX is the only thing affected.)
         customer: {
-          firstName: body.customerName.split(" ")[0],
-          lastName: body.customerName.split(" ").slice(1).join(" "),
+          firstName: body.customerName.split(" ")[0] || "Customer",
+          lastName: body.customerName.split(" ").slice(1).join(" ") || "",
           email: body.customerEmail,
         },
         shoppingCart: {
@@ -176,17 +240,15 @@ export default async function handler(
                 .filter(Boolean)
                 .join(" — ") || undefined,
           })),
-          // Hint to Clover that this is a pickup order — no shipping.
-          // Setting shippingAmount: 0 also keeps the order summary tidy.
-          shippingAmount: 0,
         },
-        // Free-form tags Clover stores on the session. We use it as an
-        // extra signal that this is a pickup order. Visible in Clover
-        // dashboard under the order's metadata.
+        // Phone goes here so it's preserved on the Clover order without
+        // being passed as a "contact field" Apple Pay must collect.
         merchantMetadata: {
           fulfillment: "pickup",
           source: "yolo-rollo-web",
+          customerName: body.customerName,
           customerPhone: body.customerPhone,
+          customerEmail: body.customerEmail ?? "",
         },
       },
       {

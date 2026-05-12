@@ -6,23 +6,29 @@ import { useCart } from "../lib/cartStore";
 import { brand } from "../config/brand";
 
 /**
- * Checkout page — simple form that hands off to Clover Hosted Checkout.
+ * Checkout page — Hosted Checkout flow (Clover-redirect payment).
  *
- * Flow:
- *   1. Customer fills name + phone + (optional) notes.
- *   2. We POST to /api/orders/create which:
- *      - Creates a Clover order with the cart lines
- *      - Creates a Hosted Checkout session against that order
- *      - Returns a checkoutUrl to Clover's hosted payment page
- *   3. We redirect the browser to checkoutUrl. Clover collects card +
- *      Apple Pay / Google Pay, handles 3DS, fraud, retries, etc.
- *   4. On payment success, Clover redirects to /confirmation/:orderId.
- *      On failure, it redirects back to /checkout with ?error=...
+ *   1. Customer fills name + phone + (optional) email + notes.
+ *   2. We POST to /api/orders/create WITHOUT a paymentToken — the
+ *      server falls through its inline-Charges path and creates a
+ *      Clover Hosted Checkout session instead.
+ *   3. Server returns { orderId, ticketNumber, checkoutUrl } where
+ *      checkoutUrl is Clover's hosted payment page.
+ *   4. We redirect the browser to checkoutUrl. Clover collects card +
+ *      Apple Pay / Google Pay there.
+ *   5. On success, Clover redirects back to /confirmation/:orderId.
+ *      On failure, Clover redirects to /checkout?error=payment_failed.
  *
- * Clover Hosted Checkout requires HTTPS for the redirect URLs (even in
- * sandbox), so this flow won't work on http://localhost. Deploy to a
- * Vercel preview (`npx vercel deploy`) and test from the HTTPS preview
- * URL.
+ * Why we're on this path (not the inline Path B we built):
+ *   The Charges API path requires Card Not Present to be enabled on
+ *   the merchant account, which it isn't yet (open ticket with Clover
+ *   Support). The Apple Pay sheet on Clover's hosted page asks for
+ *   shipping contact info (also a Clover-side config issue) — clunky
+ *   but doesn't block payment. Card payment works cleanly.
+ *
+ * The inline payment components (PaymentBox/CardForm/WalletButtons)
+ * are still in src/components/payment/ — orphaned, unused. We can
+ * revive them once Clover Support fixes the account config.
  */
 export function Checkout() {
   const lines = useCart((s) => s.lines);
@@ -83,12 +89,12 @@ export function Checkout() {
         customerEmail: email.trim() || undefined,
         notes: notes.trim() || undefined,
         lines,
-        // No paymentToken — server creates a Hosted Checkout session.
+        // No paymentToken — server will create a Hosted Checkout session.
       });
-      // Keep the orderId around so /confirmation can resume polling
-      // even if Clover's redirect strips query params.
+      // Stash the orderId so /confirmation can resume polling even if
+      // Clover's redirect strips query params.
       sessionStorage.setItem("yolo-rollo-pending-order", order.orderId);
-      // Off to Clover.
+      // Off to Clover's hosted payment page.
       window.location.href = order.checkoutUrl;
     } catch (err) {
       setError((err as Error).message ?? "Could not start payment.");
@@ -207,7 +213,9 @@ export function Checkout() {
           disabled={submitting}
           className="btn-primary w-full"
         >
-          {submitting ? "Sending you to payment…" : `Continue to payment · $${total.toFixed(2)}`}
+          {submitting
+            ? "Sending you to payment…"
+            : `Continue to payment · $${total.toFixed(2)}`}
         </button>
       </form>
     </motion.div>

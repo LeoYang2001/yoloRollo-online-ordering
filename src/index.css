@@ -20,6 +20,25 @@
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-full bg-rollo-pink px-6 py-3 font-semibold text-white shadow-rollo transition active:scale-[0.98] disabled:opacity-50;
   }
+
+  /*
+   * Hide Clover.js injected branding that bleeds into the page DOM
+   * outside its own iframes. Clover injects a "Secure Payments Powered
+   * by Clover" header and a "Privacy Policy" link as plain DOM nodes
+   * (not inside the cross-origin iframe), and they show up as ghosted
+   * text behind our payment box. We hide them with attribute selectors
+   * because the SDK doesn't give them stable class names.
+   */
+  [class*="clover"][class*="powered"],
+  [class*="clover"][class*="privacy"],
+  [class*="clover-branding"],
+  [id*="clover-branding"],
+  [class*="powered-by-clover"],
+  [class*="cleeng-privacy"],
+  div[style*="position: fixed"][style*="opacity: 0"] {
+    display: none !important;
+  }
+
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-full border-2 border-rollo-ink/15 bg-white px-5 py-2.5 font-semibold text-rollo-ink transition hover:border-rollo-pink hover:text-rollo-pink;
   }
