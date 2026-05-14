@@ -1,0 +1,4766 @@
+{
+  "fetchedAt": "2026-05-13T09:00:10.082727",
+  "items": [
+    {
+      "id": "RTQSEQR7FV0SW",
+      "hidden": true,
+      "available": true,
+      "autoManage": false,
+      "name": "Delivery Fee",
+      "price": 0,
+      "priceType": "VARIABLE",
+      "defaultTaxRates": true,
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1778543055000,
+      "deleted": false,
+      "onlineName": "Delivery Fee",
+      "enabledOnline": false,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "SDQN6D6SBATAW",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "TEST_ITEM",
+      "price": 11,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778547200000,
+      "deleted": false,
+      "onlineName": "TEST_ITEM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "BRNG6WCNJKG52",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Customize Your Own Roll",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1778428237000,
+      "deleted": false,
+      "onlineName": "Customize Your Own Roll",
+      "enabledOnline": false,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "D3HQGKH9T5QA6",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Yolo Signature \u2014 Strawberry Crumble",
+      "alternateName": "crumbles with strawberry ice cream",
+      "price": 899,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778624001000,
+      "deleted": false,
+      "onlineName": "signature_1",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "SYDZC2JVYS8Z2",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Yolo Signature \u2014 Waffle Bowl Classic",
+      "alternateName": "Waffle bowl ice cream",
+      "price": 899,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778540517000,
+      "deleted": false,
+      "onlineName": "signature_1",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "JZSRTY85HY28M",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Starbucks Frappuccino",
+      "price": 350,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778428231000,
+      "deleted": false,
+      "onlineName": "Starbucks Frappuccino",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "GXPP3GRCA9HYM",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Gift card",
+      "code": "CLOVER_GIFT_CARD",
+      "price": 0,
+      "priceType": "VARIABLE",
+      "defaultTaxRates": false,
+      "isRevenue": false,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1750536482000,
+      "deleted": false,
+      "onlineName": "Gift card",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "WBGA32PGR8NN0",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Cup of Ice",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 99,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "C3YQXMA1ABKZM",
+            "name": "Cup of Ice's Size",
+            "showByDefault": true,
+            "modifierIds": "EBV4N2NH0APJY,109T78VYGNRJM",
+            "items": {
+              "elements": [
+                {
+                  "id": "WBGA32PGR8NN0"
+                }
+              ]
+            },
+            "sortOrder": 10,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1753467976000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Cup of Ice",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "NQBB3B8S6Q0RY",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Cup of Water",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "KS4H2HF7A1M82",
+            "name": "Cup of Water's Size",
+            "showByDefault": true,
+            "items": {
+              "elements": [
+                {
+                  "id": "NQBB3B8S6Q0RY"
+                }
+              ]
+            },
+            "sortOrder": 9,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1564084052000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Cup of Water",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "A011EQ6YB46HG",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Cup of Water",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 139,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "KS4H2HF7A1M82",
+            "name": "Cup of Water's Size",
+            "showByDefault": true,
+            "items": {
+              "elements": [
+                {
+                  "id": "A011EQ6YB46HG"
+                }
+              ]
+            },
+            "sortOrder": 9,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1760642609000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Cup of Water",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "9YZT4PFXQ6W4W",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Thai Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "9YZT4PFXQ6W4W"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "9YZT4PFXQ6W4W"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "9YZT4PFXQ6W4W"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778438181000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "THAI BUBBLE TEA",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "WYP6TW19WBFCC",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Taro Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "WYP6TW19WBFCC"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "WYP6TW19WBFCC"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "WYP6TW19WBFCC"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778428228000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "TARO BUBBLE TEA",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "Y374DWJ462QWC",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Strawberry Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "Y374DWJ462QWC"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "Y374DWJ462QWC"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "Y374DWJ462QWC"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778630903000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "STRAWBERRY BUBBLE TEA",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "Z4ET2CGQ5NVTG",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "LIGHT BULB",
+      "price": 499,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "cost": 0,
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "Z4ET2CGQ5NVTG"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "8BYDX59V742Z2",
+            "name": "FLAVOR",
+            "showByDefault": true,
+            "modifierIds": "X3NVAZQMEM9K4,1K0SQG1D141DP,NNEWNW6N0CPEY,1MAS0KK70NC14,98A3AHZ3SSNDW,MMP364NBANMWW,02ZNZ7JTZA4AW,AYCH6YGD6EQ84,6CM9ERQPJSTSW,44Z8AZA66TTF2",
+            "items": {
+              "elements": [
+                {
+                  "id": "Z4ET2CGQ5NVTG"
+                }
+              ]
+            },
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1524173986000,
+      "deleted": false,
+      "onlineName": "LIGHT BULB",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "MAK80VV870XD4",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "REGULAR",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 425,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "MAK80VV870XD4"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "8BYDX59V742Z2",
+            "name": "FLAVOR",
+            "showByDefault": true,
+            "modifierIds": "X3NVAZQMEM9K4,1K0SQG1D141DP,NNEWNW6N0CPEY,1MAS0KK70NC14,98A3AHZ3SSNDW,MMP364NBANMWW,02ZNZ7JTZA4AW,AYCH6YGD6EQ84,6CM9ERQPJSTSW,44Z8AZA66TTF2",
+            "items": {
+              "elements": [
+                {
+                  "id": "MAK80VV870XD4"
+                }
+              ]
+            },
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1626205564000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "REGULAR",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "7SY2W945SQX16",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Wip Cream",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1649701898000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Wip Cream",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "KQ0747JXT3ABW",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Whipped Cream",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "KQ0747JXT3ABW"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1649701889000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Whipped Cream",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "1EC36KBSNGR82",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "RED BULL",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 365,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1716234288000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "RED BULL",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "2WQV4WGVGX8EG",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "RED BULL ENERGY DRINK",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 329,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1524172340000,
+      "deleted": false,
+      "onlineName": "RED BULL ENERGY DRINK",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "GSBRGP404NPPM",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Blueberry Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "GSBRGP404NPPM"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "GSBRGP404NPPM"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "GSBRGP404NPPM"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1715995076000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Blueberry Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "ZEQPCE0EXEZYG",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Mango Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZEQPCE0EXEZYG"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZEQPCE0EXEZYG"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZEQPCE0EXEZYG"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778625238000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Mango Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "1QGGR88NG93FR",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Coconut Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "1QGGR88NG93FR"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "1QGGR88NG93FR"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "1QGGR88NG93FR"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778513689000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Coconut Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "ZZTYJ12YP05AA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Honeydew Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZZTYJ12YP05AA"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZZTYJ12YP05AA"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "ZZTYJ12YP05AA"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1715995093000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Honeydew Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "V4GTDC320Q070",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Strawberry Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "V4GTDC320Q070"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "V4GTDC320Q070"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "V4GTDC320Q070"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778607414000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Strawberry Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "RFF59BX957W8M",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "CHOCOLATE SMOOTHIES",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "RFF59BX957W8M"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "RFF59BX957W8M"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "RFF59BX957W8M"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778526156000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "CHOCOLATE SMOOTHIES",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "R3143E0ZFN8K8",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Vanilla Smoothie",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 599,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "R3143E0ZFN8K8"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "9R6EF3J5X19WG",
+            "name": "Size",
+            "showByDefault": true,
+            "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+            "items": {
+              "elements": [
+                {
+                  "id": "R3143E0ZFN8K8"
+                }
+              ]
+            },
+            "sortOrder": 7,
+            "deleted": false
+          },
+          {
+            "id": "F6HJTCMXWA18Y",
+            "name": "Whipped Cream",
+            "showByDefault": true,
+            "modifierIds": "1QSPM5F9GK494",
+            "items": {
+              "elements": [
+                {
+                  "id": "R3143E0ZFN8K8"
+                }
+              ]
+            },
+            "sortOrder": 8,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "C1S8PN1T6DG90",
+            "name": "SMOOTHIE",
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778616840000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "VANILLA Smoothie",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "XRN39N0T8X00E",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #6 \u2014 Vanilla Cheesecake",
+      "alternateName": "Vanilla & Cheesecake mix-in & condensed milk",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778631950000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "SPECIAL #6",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "SYNG1X5DN3ENM",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "COCONUT ROLLED ICE CREAM",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "SYNG1X5DN3ENM"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "QGWXBB0Y9YVSR",
+            "name": "Old Topping",
+            "showByDefault": true,
+            "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+            "items": {
+              "elements": [
+                {
+                  "id": "SYNG1X5DN3ENM"
+                }
+              ]
+            },
+            "sortOrder": 11,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778632856000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "COCONUT ROLLED ICE CREAM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "Q6R2F8BDAM1EC",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Monster Energy drink",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 365,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": []
+      },
+      "modifiedTime": 1716234310000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Monster Energy drink",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "WB5N72RERY2ET",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "4 Extra Topping",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 400,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "AR0KECQ4GC7GP",
+            "name": "EXTRA TOPPING",
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778366332000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "4 Extra Toppings",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "3T3GVQZCTS4FA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "3 Extra Topping",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 300,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "AR0KECQ4GC7GP",
+            "name": "EXTRA TOPPING",
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1777760704000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "3 Extra Toppings",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "D3FZT884HDRSW",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "2  Extra Topping",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 200,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "AR0KECQ4GC7GP",
+            "name": "EXTRA TOPPING",
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778448056000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "2  Extra Toppings",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "KMNWA7Y9G9S1M",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "1 Extra Topping",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 100,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "AR0KECQ4GC7GP",
+            "name": "EXTRA TOPPING",
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778545641000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "1 Extra Topping",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "HCVVZM94RPCFE",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "MANGO ROLLED ICE CREAM",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "HCVVZM94RPCFE"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "QGWXBB0Y9YVSR",
+            "name": "Old Topping",
+            "showByDefault": true,
+            "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+            "items": {
+              "elements": [
+                {
+                  "id": "HCVVZM94RPCFE"
+                }
+              ]
+            },
+            "sortOrder": 11,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778625238000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "MANGO ROLLED ICE CREAM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "11RSPRR5TP8XA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "CHOCOLATE ROLLED ICE CREAM",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "11RSPRR5TP8XA"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "QGWXBB0Y9YVSR",
+            "name": "Old Topping",
+            "showByDefault": true,
+            "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+            "items": {
+              "elements": [
+                {
+                  "id": "11RSPRR5TP8XA"
+                }
+              ]
+            },
+            "sortOrder": 11,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778540681000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "CHOCOLATE ROLLED ICE CREAM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "DQ2NFH2GFMZ1Y",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #5 \u2014 Coconut M&M",
+      "alternateName": "Coconut & Strawberry mix-in & M&Ms",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778624530000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Special#5",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "19VJYTMD12ATT",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #4 \u2014 Mango Strawberry",
+      "alternateName": "Mango & Strawberry mix-in & mango topping",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778632381000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Special #4",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "16GSS8Y3D35CY",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #3 \u2014 Choco Oreo",
+      "alternateName": "Chocolate & Oreo mix-in & chocolate syrup",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778620720000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Special#3",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "9VB4B2GPK2E4T",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #2 \u2014 Strawberry Cheesecake",
+      "alternateName": "Strawberry & Cheese cake mix-in & strawberry topping",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778620720000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Special#2",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "4SZFNG4AHB1AG",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Signature Roll #1 \u2014 Cookies & Cream",
+      "alternateName": "Vanilla & Orea Mix-in & Orea topping",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "8TRXGHDM04862",
+            "name": "SPECIALS",
+            "sortOrder": 1,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778629761000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Special#1",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "GWSRBBJYCHAQE",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "STRAWBERRY ROLLED ICE CREAM",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "GWSRBBJYCHAQE"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "QGWXBB0Y9YVSR",
+            "name": "Old Topping",
+            "showByDefault": true,
+            "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+            "items": {
+              "elements": [
+                {
+                  "id": "GWSRBBJYCHAQE"
+                }
+              ]
+            },
+            "sortOrder": 11,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778629037000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "STRAWBERRY ROLLED ICE CREAM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "6T1GAS4WKNPXC",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "VANILLA ROLLED ICE CREAM",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 699,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "K0S4HB73TMKB4",
+            "name": "Mix",
+            "showByDefault": true,
+            "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+            "items": {
+              "elements": [
+                {
+                  "id": "6T1GAS4WKNPXC"
+                }
+              ]
+            },
+            "sortOrder": 0,
+            "deleted": false
+          },
+          {
+            "id": "QGWXBB0Y9YVSR",
+            "name": "Old Topping",
+            "showByDefault": true,
+            "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+            "items": {
+              "elements": [
+                {
+                  "id": "6T1GAS4WKNPXC"
+                }
+              ]
+            },
+            "sortOrder": 11,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "A460Y2Y8ZQW78",
+            "name": "ROLLED ICE CREAM",
+            "sortOrder": 0,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778630903000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "VANILLA ROLLED ICE CREAM",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "E2RWHP4R7NCD6",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Lychee Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "E2RWHP4R7NCD6"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "E2RWHP4R7NCD6"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "E2RWHP4R7NCD6"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1777843181000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Lychee Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "6J9SFBH8ST420",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Blueberry Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "6J9SFBH8ST420"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "6J9SFBH8ST420"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "6J9SFBH8ST420"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778513689000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Blueberry Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "9GQPMS2D927XA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Honeydew Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "9GQPMS2D927XA"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "9GQPMS2D927XA"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "9GQPMS2D927XA"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778361130000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Honeydew Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "J0PK5YMJ8WBPR",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Red Bean Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "J0PK5YMJ8WBPR"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "J0PK5YMJ8WBPR"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "J0PK5YMJ8WBPR"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1625341775000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Red Bean Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "Q499W9W8YJD50",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Jasmine Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "Q499W9W8YJD50"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "Q499W9W8YJD50"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "Q499W9W8YJD50"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778533965000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Jasmine Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "AW0Q2P71B29VT",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Coconut Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "AW0Q2P71B29VT"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "AW0Q2P71B29VT"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "AW0Q2P71B29VT"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778612138000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Coconut Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "JRQCZC89W8GFA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Mango Bubble Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "JRQCZC89W8GFA"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "JRQCZC89W8GFA"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "JRQCZC89W8GFA"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778365388000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Mango Bubble Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "EM994BH3A702R",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Bubble Milk Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 0,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "EVFDEQE3CJ51M",
+            "name": "SIZE",
+            "showByDefault": true,
+            "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+            "items": {
+              "elements": [
+                {
+                  "id": "EM994BH3A702R"
+                }
+              ]
+            },
+            "sortOrder": 1,
+            "deleted": false
+          },
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "EM994BH3A702R"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          },
+          {
+            "id": "3TV2EZVQVTFXY",
+            "name": "SWEETNESS",
+            "showByDefault": true,
+            "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+            "items": {
+              "elements": [
+                {
+                  "id": "EM994BH3A702R"
+                }
+              ]
+            },
+            "sortOrder": 5,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "83XZDAZ9M33AM",
+            "name": "BUBBLE TEA",
+            "sortOrder": 7,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778437401000,
+      "priceWithoutVat": 0,
+      "deleted": false,
+      "onlineName": "Bubble Milk Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "54PZXRH5NG5ZT",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Bottle Water",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 139,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778534325000,
+      "deleted": false,
+      "onlineName": "Bottle Water",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "QQNTWWDRZ19HW",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Bottle Drink",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 229,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1778616840000,
+      "deleted": false,
+      "onlineName": "Bottle Drink",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "8HGCX7J90YFPA",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Ice Thai Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 219,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": [
+          {
+            "id": "WX1EA707HCJ44",
+            "name": "Boba",
+            "showByDefault": true,
+            "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+            "items": {
+              "elements": [
+                {
+                  "id": "8HGCX7J90YFPA"
+                }
+              ]
+            },
+            "sortOrder": 4,
+            "deleted": false
+          }
+        ]
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1524172340000,
+      "deleted": false,
+      "onlineName": "Ice Thai Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "JJ3HMAJY3GB66",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Ice Chocolate",
+      "alternateName": "Ice Chocolate",
+      "code": "",
+      "sku": "",
+      "price": 219,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1524172340000,
+      "deleted": false,
+      "onlineName": "Ice Chocolate",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "CTR8HM64WAJ5A",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Iced Tea",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 219,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "H2HETW5MAB3SJ",
+            "name": "COLD DRINKS",
+            "sortOrder": 6,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1524172340000,
+      "deleted": false,
+      "onlineName": "Iced Tea",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    },
+    {
+      "id": "WAM414KBECB7T",
+      "hidden": false,
+      "available": true,
+      "autoManage": false,
+      "name": "Coffee",
+      "alternateName": "",
+      "code": "",
+      "sku": "",
+      "price": 169,
+      "priceType": "FIXED",
+      "defaultTaxRates": true,
+      "unitName": "",
+      "cost": 0,
+      "isRevenue": true,
+      "stockCount": 0,
+      "modifierGroups": {
+        "elements": []
+      },
+      "categories": {
+        "elements": [
+          {
+            "id": "AE60KRQH9A5PE",
+            "name": "HOT DRINKS",
+            "sortOrder": 3,
+            "deleted": false
+          }
+        ]
+      },
+      "modifiedTime": 1524172340000,
+      "deleted": false,
+      "onlineName": "Coffee",
+      "enabledOnline": true,
+      "isAgeRestricted": false
+    }
+  ],
+  "modifier_groups": [
+    {
+      "id": "K0S4HB73TMKB4",
+      "name": "Mix",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "CFY9X8XZMZ5FY",
+            "name": "Mix Banana",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959560000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "EN6HG1S9PN93P",
+            "name": "Mix Mango",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960178000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8P7F7QX0Y04JG",
+            "name": "Mix Lychee",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960126000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "K604K4V6A4FEP",
+            "name": "Mix Oreo Cookie",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959811000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JQJZMDXXNWVQE",
+            "name": "Mix Strawberry",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960194000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "EH6EQQZQKVMFT",
+            "name": "Mix Pineapple",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959451000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "XGJGQMD58Z3GA",
+            "name": "Mix Brownie",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959988000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "ZPDAE7HJJGJB2",
+            "name": "Mix Blueberry",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959506000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "NTEF0CT4RVGXP",
+            "name": "Mix Cherry",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959981000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JCMWBVS3BRP7P",
+            "name": "Mix Cheesecake",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960204000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "XC0GX8ZGV975R",
+            "name": "1  Extra Mix",
+            "alternateName": "",
+            "available": true,
+            "price": 100,
+            "modifiedTime": 1756959892000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JYSNAKM9977VG",
+            "name": "2  Extra Mix",
+            "alternateName": "",
+            "available": true,
+            "price": 200,
+            "modifiedTime": 1756959465000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "B0T70CRTP7Z56",
+            "name": "3 Extra Mix",
+            "alternateName": "",
+            "available": true,
+            "price": 300,
+            "modifiedTime": 1756960065000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "F474072AMSCJE",
+            "name": "Mix Coconut",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959969000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          },
+          {
+            "id": "GA7Z8MJ179AG8",
+            "name": "Mix Peanut Butter",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960271000,
+            "modifierGroup": {
+              "id": "K0S4HB73TMKB4"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "CFY9X8XZMZ5FY,EN6HG1S9PN93P,8P7F7QX0Y04JG,K604K4V6A4FEP,JQJZMDXXNWVQE,EH6EQQZQKVMFT,XGJGQMD58Z3GA,ZPDAE7HJJGJB2,NTEF0CT4RVGXP,JCMWBVS3BRP7P,502EDQ4HHH9ZW,XC0GX8ZGV975R,JYSNAKM9977VG,B0T70CRTP7Z56,F474072AMSCJE,GA7Z8MJ179AG8",
+      "sortOrder": 0,
+      "deleted": false
+    },
+    {
+      "id": "EVFDEQE3CJ51M",
+      "name": "SIZE",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "S71KMMN5N4QXM",
+            "name": "LIGHT BULB",
+            "alternateName": "",
+            "available": true,
+            "price": 699,
+            "modifiedTime": 1756959845000,
+            "modifierGroup": {
+              "id": "EVFDEQE3CJ51M"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8DB3BBCMJNQB2",
+            "name": "REGULAR",
+            "alternateName": "",
+            "available": true,
+            "price": 599,
+            "modifiedTime": 1756959648000,
+            "modifierGroup": {
+              "id": "EVFDEQE3CJ51M"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "S71KMMN5N4QXM,8DB3BBCMJNQB2",
+      "sortOrder": 1,
+      "deleted": false
+    },
+    {
+      "id": "1WCXYM326Z9W0",
+      "name": "Extra Topping",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "Q321T5H9DT7CY",
+            "name": "1 Extra Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 100,
+            "modifiedTime": 1775849047000,
+            "modifierGroup": {
+              "id": "1WCXYM326Z9W0"
+            },
+            "deleted": false
+          },
+          {
+            "id": "556XGBE22C1W2",
+            "name": "2 Extra Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 200,
+            "modifiedTime": 1775849067000,
+            "modifierGroup": {
+              "id": "1WCXYM326Z9W0"
+            },
+            "deleted": false
+          },
+          {
+            "id": "SX1K0M7TJASWW",
+            "name": "3 Extra Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 300,
+            "modifiedTime": 1775849095000,
+            "modifierGroup": {
+              "id": "1WCXYM326Z9W0"
+            },
+            "deleted": false
+          },
+          {
+            "id": "VTYZB7ESQHJP0",
+            "name": "4 Extra Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 400,
+            "modifiedTime": 1775849115000,
+            "modifierGroup": {
+              "id": "1WCXYM326Z9W0"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "Q321T5H9DT7CY,556XGBE22C1W2,SX1K0M7TJASWW,VTYZB7ESQHJP0",
+      "sortOrder": 2,
+      "deleted": false
+    },
+    {
+      "id": "WX1EA707HCJ44",
+      "name": "Boba",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "XCWKE3H9VAYEY",
+            "name": "Tapioca Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960071000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "VP84ZNVWCTDJR",
+            "name": "Mango Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960220000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "38YRMYFYW5Q32",
+            "name": "Strawberry Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959413000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "0ECNFK8DZVC0J",
+            "name": "Kiwi Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959618000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "WHDKG9KRZSQ12",
+            "name": "Peach Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960168000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8AMXR31V9BX12",
+            "name": "Lychee Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960177000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "82SX3NHHZTJ9W",
+            "name": "Blueberry Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960246000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "96PDPQSZKWGV2",
+            "name": "Yogurt Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959513000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8WC6Y3D0DP9PE",
+            "name": "Passion Fruit Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960143000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          },
+          {
+            "id": "0DF1ZNVW7T91G",
+            "name": "Apple Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960255000,
+            "modifierGroup": {
+              "id": "WX1EA707HCJ44"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "XCWKE3H9VAYEY,VP84ZNVWCTDJR,38YRMYFYW5Q32,0ECNFK8DZVC0J,WHDKG9KRZSQ12,8AMXR31V9BX12,82SX3NHHZTJ9W,96PDPQSZKWGV2,8WC6Y3D0DP9PE,0DF1ZNVW7T91G",
+      "sortOrder": 4,
+      "deleted": false
+    },
+    {
+      "id": "3TV2EZVQVTFXY",
+      "name": "SWEETNESS",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "ZXFZV6FDP2VFJ",
+            "name": "Extra Sweet",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524617187000,
+            "modifierGroup": {
+              "id": "3TV2EZVQVTFXY"
+            },
+            "deleted": false
+          },
+          {
+            "id": "4CGQ7H0X5FXTW",
+            "name": "Less Sweet",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524617187000,
+            "modifierGroup": {
+              "id": "3TV2EZVQVTFXY"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "ZXFZV6FDP2VFJ,4CGQ7H0X5FXTW",
+      "sortOrder": 5,
+      "deleted": false
+    },
+    {
+      "id": "8BYDX59V742Z2",
+      "name": "FLAVOR",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "X3NVAZQMEM9K4",
+            "name": "Blueberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "1K0SQG1D141DP",
+            "name": "Coconut",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "NNEWNW6N0CPEY",
+            "name": "Honey Dew",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "1MAS0KK70NC14",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "98A3AHZ3SSNDW",
+            "name": "Jasmine Tea",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "MMP364NBANMWW",
+            "name": "Lychee",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "02ZNZ7JTZA4AW",
+            "name": "Milk Tea",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "AYCH6YGD6EQ84",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "6CM9ERQPJSTSW",
+            "name": "Taro",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "44Z8AZA66TTF2",
+            "name": "Thai Tea",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1524174119000,
+            "modifierGroup": {
+              "id": "8BYDX59V742Z2"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "X3NVAZQMEM9K4,1K0SQG1D141DP,NNEWNW6N0CPEY,1MAS0KK70NC14,98A3AHZ3SSNDW,MMP364NBANMWW,02ZNZ7JTZA4AW,AYCH6YGD6EQ84,6CM9ERQPJSTSW,44Z8AZA66TTF2",
+      "sortOrder": 6,
+      "deleted": false
+    },
+    {
+      "id": "YET1YX8MK94RC",
+      "name": "Mix2",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "BT3XH680FE626",
+            "name": "Strawberry",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532044270000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "XW69S3HHGA5TY",
+            "name": "Banana",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131149000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "7C1FENYJMG072",
+            "name": "Mango",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131158000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "MD6DBXMH8N6S2",
+            "name": "Lychee",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131174000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "2FHXG8GXJ06N6",
+            "name": "Oreo Cookies",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131189000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "0QVKAR32K1B2R",
+            "name": "Pineapple",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131202000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "P009PXCRZSTPW",
+            "name": "Brownie",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131220000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "1PT8E45R4RTJG",
+            "name": "Blueberry",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131230000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "26WC6PTSNW87P",
+            "name": "Cherry",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131245000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8M50E03WRHBDC",
+            "name": "Cheesecake",
+            "available": true,
+            "price": 26,
+            "modifiedTime": 1532131256000,
+            "modifierGroup": {
+              "id": "YET1YX8MK94RC"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "BT3XH680FE626,XW69S3HHGA5TY,7C1FENYJMG072,MD6DBXMH8N6S2,2FHXG8GXJ06N6,0QVKAR32K1B2R,P009PXCRZSTPW,1PT8E45R4RTJG,26WC6PTSNW87P,8M50E03WRHBDC",
+      "sortOrder": 7,
+      "deleted": false
+    },
+    {
+      "id": "9R6EF3J5X19WG",
+      "name": "Size",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "JQSYQ913Z7T8E",
+            "name": "Light Bulb",
+            "alternateName": "",
+            "available": true,
+            "price": 300,
+            "modifiedTime": 1756959760000,
+            "modifierGroup": {
+              "id": "9R6EF3J5X19WG"
+            },
+            "deleted": false
+          },
+          {
+            "id": "D4EVM96MDMRRJ",
+            "name": "Regular Cup",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1532203562000,
+            "modifierGroup": {
+              "id": "9R6EF3J5X19WG"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "JQSYQ913Z7T8E,D4EVM96MDMRRJ",
+      "sortOrder": 7,
+      "deleted": false
+    },
+    {
+      "id": "F6HJTCMXWA18Y",
+      "name": "Whipped Cream",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "1QSPM5F9GK494",
+            "name": "Whipped Cream",
+            "alternateName": "",
+            "available": true,
+            "price": 100,
+            "modifiedTime": 1756959986000,
+            "modifierGroup": {
+              "id": "F6HJTCMXWA18Y"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "1QSPM5F9GK494",
+      "sortOrder": 8,
+      "deleted": false
+    },
+    {
+      "id": "KS4H2HF7A1M82",
+      "name": "Cup of Water's Size",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "ZKM1GC3Q3PAAW",
+            "name": "Medium",
+            "alternateName": "",
+            "available": true,
+            "price": 139,
+            "modifiedTime": 1760642574000,
+            "modifierGroup": {
+              "id": "KS4H2HF7A1M82"
+            },
+            "deleted": false
+          },
+          {
+            "id": "5T5KBZ0BC39JM",
+            "name": "Small",
+            "available": true,
+            "price": 25,
+            "modifiedTime": 1564083520000,
+            "modifierGroup": {
+              "id": "KS4H2HF7A1M82"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "sortOrder": 9,
+      "deleted": false
+    },
+    {
+      "id": "C3YQXMA1ABKZM",
+      "name": "Cup of Ice's Size",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "EBV4N2NH0APJY",
+            "name": "Small",
+            "alternateName": "",
+            "available": true,
+            "price": 25,
+            "modifiedTime": 1566696578000,
+            "modifierGroup": {
+              "id": "C3YQXMA1ABKZM"
+            },
+            "deleted": false
+          },
+          {
+            "id": "109T78VYGNRJM",
+            "name": "Medium",
+            "available": true,
+            "price": 50,
+            "modifiedTime": 1566696607000,
+            "modifierGroup": {
+              "id": "C3YQXMA1ABKZM"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "EBV4N2NH0APJY,109T78VYGNRJM",
+      "sortOrder": 10,
+      "deleted": false
+    },
+    {
+      "id": "QGWXBB0Y9YVSR",
+      "name": "Old Topping",
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "GW1NHABETW9GC",
+            "name": "Strawberry Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959700000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "NE398G2X6PEMT",
+            "name": "Mango Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959865000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "7AXWDCQ02B2QP",
+            "name": "Pineapple Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959939000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "Y8BAST15BP8G4",
+            "name": "Strawberry Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959816000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "QNMJVX541K9RA",
+            "name": "Mango Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959878000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "KZPY40Q5T35QC",
+            "name": "Lychee Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959660000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "KCEBPQJPDV6AC",
+            "name": "Kiwi Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960181000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "MPT157CAQV45J",
+            "name": "Blueberry Boba",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959843000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "7AEPFWA0J6QXW",
+            "name": "Cherries Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960187000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "XXEHPJJJ8B52J",
+            "name": "Oreo Cookie Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960224000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "QG512HT45M7TM",
+            "name": "Gummy Bears",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960272000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "TVB6DXEVFXYQR",
+            "name": "Brownie Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959503000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "2G8HJTA8D9N5C",
+            "name": "M&Ms",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756960018000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "4YCSR11D4GRNP",
+            "name": "Caramel Syrup",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959496000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "P1HR4G3PHG35P",
+            "name": "Condensed Milk",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959840000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "RQY30DSE86XHT",
+            "name": "Chocolate Syrup",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959530000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "56G01WSVJ7SBP",
+            "name": "Whipped Cream",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1756959645000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "KJVGQSA49HV92",
+            "name": "1 Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 100,
+            "modifiedTime": 1775849627000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "VMJWDSTD6TSBW",
+            "name": "2 Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 200,
+            "modifiedTime": 1775849638000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "K4VRV3167S8ME",
+            "name": "3 Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 300,
+            "modifiedTime": 1775849647000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "J4DB1S8XSJCDW",
+            "name": "4 Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 400,
+            "modifiedTime": 1775849655000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "YWTYM7BH2J5T4",
+            "name": "Sprinkles",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1758311277000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "TSMC1A6QD6AYE",
+            "name": "Strawberry Syrup",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1758311365000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "AV9R4XBC8FG6J",
+            "name": "Peach Topping",
+            "alternateName": "",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1768930941000,
+            "modifierGroup": {
+              "id": "QGWXBB0Y9YVSR"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "GW1NHABETW9GC,NE398G2X6PEMT,7AXWDCQ02B2QP,Y8BAST15BP8G4,QNMJVX541K9RA,KZPY40Q5T35QC,KCEBPQJPDV6AC,MPT157CAQV45J,7AEPFWA0J6QXW,XXEHPJJJ8B52J,QG512HT45M7TM,TVB6DXEVFXYQR,2G8HJTA8D9N5C,4YCSR11D4GRNP,P1HR4G3PHG35P,RQY30DSE86XHT,56G01WSVJ7SBP,KJVGQSA49HV92,VMJWDSTD6TSBW,K4VRV3167S8ME,J4DB1S8XSJCDW,YWTYM7BH2J5T4,TSMC1A6QD6AYE,AV9R4XBC8FG6J",
+      "sortOrder": 11,
+      "deleted": false
+    },
+    {
+      "id": "X7BBJXCHXCWZG",
+      "name": "Base",
+      "minRequired": 1,
+      "maxAllowed": 1,
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "H8FKQP6188N1J",
+            "name": "Vanilla",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428192000,
+            "modifierGroup": {
+              "id": "X7BBJXCHXCWZG"
+            },
+            "deleted": false
+          },
+          {
+            "id": "7RAVKSYG7KQET",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428193000,
+            "modifierGroup": {
+              "id": "X7BBJXCHXCWZG"
+            },
+            "deleted": false
+          },
+          {
+            "id": "DHCX8KPART2NA",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428193000,
+            "modifierGroup": {
+              "id": "X7BBJXCHXCWZG"
+            },
+            "deleted": false
+          },
+          {
+            "id": "2G7ZD0095A5TM",
+            "name": "Chocolate",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428194000,
+            "modifierGroup": {
+              "id": "X7BBJXCHXCWZG"
+            },
+            "deleted": false
+          },
+          {
+            "id": "033PDKMQY1KK2",
+            "name": "Coconut",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428195000,
+            "modifierGroup": {
+              "id": "X7BBJXCHXCWZG"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "H8FKQP6188N1J,7RAVKSYG7KQET,DHCX8KPART2NA,2G7ZD0095A5TM,033PDKMQY1KK2",
+      "deleted": false
+    },
+    {
+      "id": "W1QKN0AJANK5C",
+      "name": "Mix-in",
+      "minRequired": 0,
+      "maxAllowed": 3,
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "7TPCY7AS4CRSP",
+            "name": "Banana",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428196000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "87B327F5VEY4J",
+            "name": "Oreo Cookie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428197000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "NVF2F2RT5JS6T",
+            "name": "Brownie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428198000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "HH6G0XFK8C8TR",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428198000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "6XAMDEGK6EJ7A",
+            "name": "Pineapple",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428199000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "PYCJCKPQ54XXR",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428200000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "0W1XYE4NF2F0P",
+            "name": "Blueberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428201000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "PHV5NET42CAD8",
+            "name": "Cheesecake",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428201000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "A78EBQXQ3CMA8",
+            "name": "Peanut Butter",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428202000,
+            "modifierGroup": {
+              "id": "W1QKN0AJANK5C"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "7TPCY7AS4CRSP,87B327F5VEY4J,NVF2F2RT5JS6T,HH6G0XFK8C8TR,6XAMDEGK6EJ7A,PYCJCKPQ54XXR,0W1XYE4NF2F0P,PHV5NET42CAD8,A78EBQXQ3CMA8",
+      "deleted": false
+    },
+    {
+      "id": "8AMYZYJH28S8C",
+      "name": "Sub Mix-in",
+      "minRequired": 0,
+      "maxAllowed": 1,
+      "showByDefault": false,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "2BYP13ZD0VVNA",
+            "name": "Banana",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428210000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "FA5G1HCVS6TTR",
+            "name": "Oreo Cookie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428210000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "NKYV5T6BN36RT",
+            "name": "Brownie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428211000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "SQ7KA1CRNYNCR",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428211000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JM2NJZVBADS90",
+            "name": "Pineapple",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428212000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JS8ZXQD1X6DNJ",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428212000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JVAWN8F1V51XJ",
+            "name": "Blueberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428213000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "A8PA17WN8F6ZM",
+            "name": "Cheesecake",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428213000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          },
+          {
+            "id": "6QRZSTCRNZ2XE",
+            "name": "Peanut Butter",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428214000,
+            "modifierGroup": {
+              "id": "8AMYZYJH28S8C"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "2BYP13ZD0VVNA,FA5G1HCVS6TTR,NKYV5T6BN36RT,SQ7KA1CRNYNCR,JM2NJZVBADS90,JS8ZXQD1X6DNJ,JVAWN8F1V51XJ,A8PA17WN8F6ZM,6QRZSTCRNZ2XE",
+      "deleted": false
+    },
+    {
+      "id": "FZ8GME7ZKBWCR",
+      "name": "Sub Topping",
+      "minRequired": 0,
+      "maxAllowed": 1,
+      "showByDefault": false,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "DP4X9BQ8YBQR0",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428215000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "J3J7Z20RD4AY8",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428216000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "8DHV5X2ZESGXJ",
+            "name": "Pineapple",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428216000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "6XR95S4YDB0B6",
+            "name": "Condensed Milk",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428217000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "61E6X4R60AGEY",
+            "name": "Chocolate Syrup",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428217000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "YV6RJ0NHM1EGR",
+            "name": "Caramel Syrup",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428218000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "86KZ5N85A1V1E",
+            "name": "Mango Boba",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428218000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "JTCWYYPFQ0W0T",
+            "name": "Strawberry Boba",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428219000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "WR16DSFQ664YE",
+            "name": "Oreo Cookie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428220000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "Z01R74YFP43JC",
+            "name": "M&Ms",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428220000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          },
+          {
+            "id": "1NTCQXP468WY4",
+            "name": "Gummy Bears",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428221000,
+            "modifierGroup": {
+              "id": "FZ8GME7ZKBWCR"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "DP4X9BQ8YBQR0,J3J7Z20RD4AY8,8DHV5X2ZESGXJ,6XR95S4YDB0B6,61E6X4R60AGEY,YV6RJ0NHM1EGR,86KZ5N85A1V1E,JTCWYYPFQ0W0T,WR16DSFQ664YE,Z01R74YFP43JC,1NTCQXP468WY4",
+      "deleted": false
+    },
+    {
+      "id": "QRRMDSV9DT4F2",
+      "name": "Topping",
+      "minRequired": 0,
+      "maxAllowed": 3,
+      "showByDefault": true,
+      "modifiers": {
+        "elements": [
+          {
+            "id": "STSGMMF38V1QR",
+            "name": "Mango",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428203000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "RJKRNQAEGZFP2",
+            "name": "Strawberry",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428204000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "RXK61WABXBHF6",
+            "name": "Pineapple",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428204000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "6NN9TARPTKBN0",
+            "name": "Condensed Milk",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428205000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "K6SYSGKSFJNHG",
+            "name": "Chocolate Syrup",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428205000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "VT4XMEXDM2S0J",
+            "name": "Caramel Syrup",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428206000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "DXEWKRC3GWM1J",
+            "name": "Mango Boba",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428207000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "RB38M9PTFM9VR",
+            "name": "Strawberry Boba",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428207000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "N10TZGJ0KFBTT",
+            "name": "Oreo Cookie",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428208000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "RG941G6KWWQN8",
+            "name": "M&Ms",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428208000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          },
+          {
+            "id": "KFQ83MQPBV3TA",
+            "name": "Gummy Bears",
+            "available": true,
+            "price": 0,
+            "modifiedTime": 1778428209000,
+            "modifierGroup": {
+              "id": "QRRMDSV9DT4F2"
+            },
+            "deleted": false
+          }
+        ]
+      },
+      "modifierIds": "STSGMMF38V1QR,RJKRNQAEGZFP2,RXK61WABXBHF6,6NN9TARPTKBN0,K6SYSGKSFJNHG,VT4XMEXDM2S0J,DXEWKRC3GWM1J,RB38M9PTFM9VR,N10TZGJ0KFBTT,RG941G6KWWQN8,KFQ83MQPBV3TA",
+      "deleted": false
+    },
+    {
+      "id": "B4CJD4NXXEQZ6",
+      "name": "__probe_delete_me__",
+      "minRequired": 0,
+      "maxAllowed": 1,
+      "showByDefault": true,
+      "modifiers": {
+        "elements": []
+      },
+      "deleted": false
+    },
+    {
+      "id": "C5ZXKHB4RGNE2",
+      "name": "__probe_delete_me__",
+      "minRequired": 0,
+      "maxAllowed": 1,
+      "showByDefault": true,
+      "modifiers": {
+        "elements": []
+      },
+      "deleted": false
+    }
+  ],
+  "categories": [
+    {
+      "id": "83XZDAZ9M33AM",
+      "name": "BUBBLE TEA",
+      "sortOrder": 7,
+      "deleted": false
+    },
+    {
+      "id": "H2HETW5MAB3SJ",
+      "name": "COLD DRINKS",
+      "sortOrder": 6,
+      "deleted": false
+    },
+    {
+      "id": "AR0KECQ4GC7GP",
+      "name": "EXTRA TOPPING",
+      "sortOrder": 5,
+      "deleted": false
+    },
+    {
+      "id": "C1S8PN1T6DG90",
+      "name": "SMOOTHIE",
+      "sortOrder": 4,
+      "deleted": false
+    },
+    {
+      "id": "AE60KRQH9A5PE",
+      "name": "HOT DRINKS",
+      "sortOrder": 3,
+      "deleted": false
+    },
+    {
+      "id": "FAF90T2QSWPHR",
+      "name": "SMALL ROLL ICE CREAM",
+      "sortOrder": 2,
+      "deleted": false
+    },
+    {
+      "id": "8TRXGHDM04862",
+      "name": "SPECIALS",
+      "sortOrder": 1,
+      "deleted": false
+    },
+    {
+      "id": "A460Y2Y8ZQW78",
+      "name": "ROLLED ICE CREAM",
+      "sortOrder": 0,
+      "deleted": false
+    }
+  ]
+}

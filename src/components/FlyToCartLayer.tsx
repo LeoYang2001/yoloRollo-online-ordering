@@ -94,7 +94,7 @@ export function FlyToCartLayer() {
                 width: sourceSize,
                 height: sourceSize,
               }}
-              className="grid place-items-center rounded-full bg-rollo-pink-soft shadow-rollo ring-2 ring-rollo-pink/40 overflow-hidden"
+              className="grid place-items-center rounded-full bg-rollo-pink-soft shadow-rollo-pink ring-2 ring-rollo-pink/40 overflow-hidden"
             >
               {flight.imageSrc ? (
                 <img

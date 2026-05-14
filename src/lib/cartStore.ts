@@ -5,6 +5,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartLine, MenuItem, Modifier } from "../types";
+import { inferFlavor } from "./flavors";
 
 interface CartState {
   lines: CartLine[];
@@ -45,6 +46,9 @@ export const useCart = create<CartState>()(
             priceDelta: m.priceDelta,
           })),
           notes,
+          // Carry the flavor key into the cart line so CartItem can render
+          // the same gradient swatch the user saw on the menu.
+          flavor: item.flavor ?? inferFlavor(item.name),
         };
         set({ lines: [...get().lines, line] });
       },

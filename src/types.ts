@@ -13,12 +13,26 @@ export interface Modifier {
   group: string;      // e.g. "Base", "Mix-in", "Topping", "Vessel"
 }
 
+/**
+ * Flavor key — selects the radial-gradient swatch used as a stand-in
+ * for a product photo (see `flavorGradient()` in src/lib/flavors.ts).
+ * When real photos exist, this can be ignored in favor of imageUrl.
+ */
+export type FlavorKey =
+  | "oreo" | "strawberry" | "chocolate" | "mango" | "M&M" | "condensed"
+  | "taro" | "matcha" | "coconut" | "thai" | "milk" | "jasmine"
+  | "blueberry" | "lychee" | "honeydew" | "vanilla";
+
 export interface MenuItem {
   id: string;
   name: string;       // "Build Your Own Roll", "Strawberry Classic"
   description?: string;
+  tagline?: string;   // short marketing line, e.g. "Vanilla base + Oreo mix-in"
   price: Money;
   imageUrl?: string;
+  flavor?: FlavorKey; // gradient swatch key when no imageUrl is set
+  number?: string;    // signature roll number, e.g. "#1"
+  tags?: string[];    // ["BEST SELLER"], ["NEW"], ["FAN FAV"]
   category: string;   // "Signature", "Build Your Own", "Drinks", etc.
   modifierGroups: ModifierGroup[];
   available: boolean;
@@ -47,6 +61,9 @@ export interface CartLine {
   quantity: number;
   modifiers: { id: string; name: string; priceDelta: Money }[];
   notes?: string;
+  /** Selected from MenuItem.flavor at add-time, kept so the cart line
+   *  can render the same gradient swatch without re-fetching the menu. */
+  flavor?: FlavorKey;
 }
 
 export interface OrderRequest {

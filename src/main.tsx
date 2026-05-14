@@ -10,6 +10,7 @@ import { Checkout } from "./pages/Checkout";
 import { Confirmation } from "./pages/Confirmation";
 import { MockCheckout } from "./pages/MockCheckout";
 import { TVDisplay } from "./pages/TVDisplay";
+import { Location } from "./pages/Location";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/confirmation/:orderId" element={<Confirmation />} />
+          <Route path="/location" element={<Location />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,183 @@
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { brand } from "../config/brand";
+import { Header } from "../components/ui/Layout";
+import { Display, Mono, Sticker } from "../components/ui/Typography";
+import { Button } from "../components/ui/Button";
+import { Icon } from "../components/ui/Icon";
+import { MallMap } from "../components/MallMap";
+
+/**
+ * Location — find-us page reached from the welcome screen's top-right
+ * map-pin button. Customer-facing wayfinding inside Wolfchase Galleria.
+ *
+ * Sections (top to bottom):
+ *   1. Address + actions  — store name, mall + level, address,
+ *                           Call + Get directions buttons.
+ *   2. Storefront photo   — so customers recognize the shop on sight.
+ *   3. SVG mini-map       — our own stylized wayfinder showing the
+ *                           store position relative to a nearby
+ *                           anchor / entrance.
+ *   4. Hours              — Mon–Sun rows.
+ *   5. Simon deep-link    — "Open mall directory" → opens Simon's
+ *                           interactive map zoomed to Yolo Rollo.
+ *
+ * Phone / hours / mall level / nearest anchor are all placeholders —
+ * swap the constants at the top of this file with real values.
+ */
+
+// ─── Edit these constants with the actual store info ────────────────
+const PHONE_DISPLAY = "(901) 555-0123";
+const PHONE_TEL = "+19015550123"; // E.164 for tel:
+const MALL_LEVEL = "Level 1";
+const NEAREST_ANCHOR = "Macy's"; // the major store closest to us
+const ENTRANCE_HINT = "Macy's entrance"; // mall entrance closest to us
+const HOURS: Array<{ days: string; time: string }> = [
+  { days: "Mon – Thu", time: "11 AM – 9 PM" },
+  { days: "Fri – Sat", time: "11 AM – 10 PM" },
+  { days: "Sun", time: "12 PM – 8 PM" },
+];
+const ADDRESS_LINE_1 = "2760 N Germantown Pkwy";
+const ADDRESS_LINE_2 = "Wolfchase Galleria · Memphis, TN 38133";
+const SIMON_DIRECTORY_URL =
+  "https://www.simon.com/mall/wolfchase-galleria/map/#/profile?location=Yolo%20Rollo";
+const MAPS_URL =
+  "https://www.google.com/maps/search/?api=1&query=Yolo+Rollo+Wolfchase+Galleria";
+
+export function LocationPage() {
+  const navigate = useNavigate();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className="min-h-screen bg-rollo-paper pb-24"
+    >
+      <Header title="Find us" onBack={() => navigate(-1)} />
+
+      <div className="px-5 space-y-4">
+        {/* ─── 1. Address + actions ─── */}
+        <section className="card-rollo px-4 py-4">
+          <Mono size={10}>PICKUP · NO DELIVERY</Mono>
+          <Display size={22} className="mt-2">
+            {brand.fullName}
+          </Display>
+          <div className="mt-1 text-[13px] text-rollo-ink-soft">
+            Wolfchase Galleria · {MALL_LEVEL} · near {NEAREST_ANCHOR}
+          </div>
+          <div className="mt-1 text-[13px] text-rollo-ink-soft">
+            {ADDRESS_LINE_1}
+            <br />
+            {ADDRESS_LINE_2}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <a
+              href={MAPS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1"
+            >
+              <Button variant="primary" size="md" full>
+                <Icon.pin className="h-4 w-4" />
+                Directions
+              </Button>
+            </a>
+            <a href={`tel:${PHONE_TEL}`} className="flex-1">
+              <Button variant="secondary" size="md" full>
+                Call
+              </Button>
+            </a>
+          </div>
+        </section>
+
+        {/* ─── 2. Storefront photo ─── */}
+        <section className="overflow-hidden rounded-rollo-card bg-rollo-card shadow-rollo-card">
+          {/*
+            Save the storefront photo you sent into the repo at
+            public/storefront-photo.jpg (or .png — swap the src
+            extension here) and it'll show up. Falls back to a soft
+            paper tile if the file isn't there yet.
+          */}
+          <div
+            className="relative h-[200px] w-full bg-rollo-paper-soft"
+            style={{
+              backgroundImage: "url(/storefront-photo.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div className="absolute left-3 top-3">
+              <Sticker size="md" bg="#FFFFFF" fg="#2A1722">
+                LOOK FOR THIS
+              </Sticker>
+            </div>
+          </div>
+          <div className="px-4 py-3">
+            <div className="font-display text-sm font-bold text-rollo-ink">
+              Green &amp; orange "yolo rollo" sign
+            </div>
+            <div className="mt-0.5 text-[12px] text-rollo-ink-soft">
+              The storefront has lit display shelves on either side and a
+              TV showing rolls being made. You can't miss it.
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 3. SVG wayfinder ─── */}
+        <section className="card-rollo px-4 py-4">
+          <Mono size={10}>INSIDE THE MALL</Mono>
+          <div className="mt-2 font-body text-[13px] text-rollo-ink-soft">
+            Enter from the <strong>{ENTRANCE_HINT}</strong>, head down the
+            main corridor and we're on the right between two storefronts.
+          </div>
+          <div className="mt-3">
+            <MallMap />
+          </div>
+        </section>
+
+        {/* ─── 4. Hours ─── */}
+        <section className="card-rollo px-4 py-4">
+          <Mono size={10}>HOURS</Mono>
+          <div className="mt-2 space-y-1">
+            {HOURS.map((h) => (
+              <div
+                key={h.days}
+                className="flex items-baseline justify-between font-body text-[14px]"
+              >
+                <span className="text-rollo-ink-soft">{h.days}</span>
+                <span className="font-semibold text-rollo-ink">
+                  {h.time}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-[11px] text-rollo-ink-muted">
+            Hours follow Wolfchase Galleria. Holidays may vary.
+          </div>
+        </section>
+
+        {/* ─── 5. Mall directory deep link ─── */}
+        <a href={SIMON_DIRECTORY_URL} target="_blank" rel="noreferrer">
+          <Button variant="secondary" size="md" full>
+            Open mall directory
+            <Icon.arrow />
+          </Button>
+        </a>
+
+        {/* phone + meta */}
+        <div className="pt-2 text-center">
+          <a
+            href={`tel:${PHONE_TEL}`}
+            className="font-mono text-[12px] text-rollo-ink-soft underline-offset-2 hover:underline"
+          >
+            {PHONE_DISPLAY}
+          </a>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export { LocationPage as Location };

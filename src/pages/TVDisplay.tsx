@@ -1,49 +1,99 @@
 import { QRCodeSVG } from "qrcode.react";
+import { useNavigate } from "react-router-dom";
 import { brand } from "../config/brand";
+import { Wordmark, Display, Mono, Sticker } from "../components/ui/Typography";
+import { Button } from "../components/ui/Button";
 
 /**
- * Fullscreen TV display. Open this on the in-store TV in fullscreen
- * (Chrome: F11 / Cmd-Ctrl-F). The QR code links to the customer-facing
- * ordering site at brand.publicUrl.
+ * In-store TV display. Open in fullscreen (Chrome: F11). Customers in
+ * the shop scan the QR to land on the ordering site.
  *
- * Tip: append ?utm=tv-qr to track scans separately if you want.
+ *   Hot pink fullscreen bg with decorative blobs in corners.
+ *   Top:    "yolo rollo" wordmark (green/white) + "IN-STORE DISPLAY"
+ *   Center: "✦ SKIP THE LINE" sticker · "Scan. Order. Roll." (Roll in
+ *           butter yellow) · big QR card tilted -2deg
+ *   Bottom: "NOW ROLLING / A-041 · A-042" + dark Exit button
  */
 export function TVDisplay() {
+  const navigate = useNavigate();
   const url = `${brand.publicUrl}/?src=tv`;
 
   return (
-    <div className="grid h-screen w-screen place-items-center bg-rollo-pink-soft">
-      <div className="flex flex-col items-center text-center">
-        <h1 className="font-display text-7xl leading-none md:text-8xl">
-          <span className="text-rollo-green">yolo</span>{" "}
-          <span className="text-rollo-pink">rollo</span>
-        </h1>
-        <p className="mt-3 font-display text-4xl text-rollo-orange">
-          ICE CREAM
-        </p>
+    <div className="relative h-screen w-screen overflow-hidden bg-rollo-pink text-white">
+      {/* Decorative corner blobs — positioned so they never cover text */}
+      <div className="absolute -right-20 -top-16 h-[260px] w-[260px] rounded-full bg-rollo-rose" />
+      <div className="absolute -bottom-24 -left-20 h-[300px] w-[300px] rounded-full bg-rollo-butter opacity-90" />
+      <div className="absolute right-[-40px] top-32 h-16 w-16 rounded-full bg-rollo-green" />
 
-        <p className="mt-10 font-display text-3xl">Skip the line.</p>
-        <p className="font-display text-3xl">
-          <span className="text-rollo-pink">Scan</span>{" "}
-          <span className="text-rollo-green">to order.</span>
-        </p>
-
-        <div className="mt-8 rounded-3xl bg-white p-8 shadow-rollo">
-          {/* Big QR — sized for a TV viewed across the store */}
-          <QRCodeSVG
-            value={url}
-            size={520}
-            level="H"
-            includeMargin={false}
-            fgColor="#1A1A1A"
-            bgColor="#FFFFFF"
+      <div className="relative z-10 flex h-full flex-col px-7 pb-10 pt-16">
+        {/* Header row */}
+        <div className="flex items-center justify-between">
+          <Wordmark
+            size={28}
+            colors={{ yolo: "#A6CE39", rollo: "#FFFFFF", sub: "#FCD86F" }}
           />
+          <Mono size={11} color="#fff">
+            IN-STORE DISPLAY
+          </Mono>
         </div>
 
-        <p className="mt-6 font-mono text-sm text-rollo-ink/60">{url}</p>
-        <p className="mt-1 text-xs text-rollo-ink/50">
-          {brand.subTagline} · {brand.location}
-        </p>
+        {/* Center column */}
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="self-start">
+            <Sticker size="md" bg="#FCD86F" fg="#2A1722">
+              ✦ SKIP THE LINE
+            </Sticker>
+          </div>
+
+          <Display
+            size={72}
+            className="mt-5 text-white"
+            style={{ lineHeight: 0.98 }}
+          >
+            Scan.
+            <br />
+            Order.
+            <br />
+            <span style={{ color: "#FCD86F" }}>Roll.</span>
+          </Display>
+
+          {/* QR card */}
+          <div
+            className="mt-7 self-center rounded-rollo-card bg-white p-3.5"
+            style={{
+              transform: "rotate(-2deg)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+            }}
+          >
+            <QRCodeSVG
+              value={url}
+              size={260}
+              level="H"
+              fgColor="#2A1722"
+              bgColor="#FFFFFF"
+            />
+            <div className="mt-1.5 text-center">
+              <Mono size={10} color="rgba(42,23,34,0.40)">
+                {url.replace(/^https?:\/\//, "").toUpperCase()}
+              </Mono>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <Mono size={10} color="#fff">
+              NOW ROLLING
+            </Mono>
+            <div className="mt-0.5 whitespace-nowrap font-display text-[20px] font-extrabold tracking-[-0.02em] text-white">
+              A-041 · A-042
+            </div>
+          </div>
+          <Button variant="dark" size="sm" onClick={() => navigate("/")}>
+            ← Exit
+          </Button>
+        </div>
       </div>
     </div>
   );

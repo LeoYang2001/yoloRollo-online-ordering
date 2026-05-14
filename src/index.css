@@ -9,25 +9,36 @@
     height: 100%;
   }
   body {
-    font-family: "Fredoka", system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
-    background: #fff8f2;
+    background: #fbe4ed; /* rollo-paper */
+    color: #2a1722;      /* rollo-ink */
   }
 }
 
 @layer components {
-  /* Pill-shaped primary call to action — matches the playful Yolo Rollo vibe. */
+  /*
+   * Sweet Sundae primary pill — hot pink, white text, soft glow.
+   * Used as the main CTA on every page (Get started, Continue to
+   * checkout, Pay, Order again, etc.).
+   */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full bg-rollo-pink px-6 py-3 font-semibold text-white shadow-rollo transition active:scale-[0.98] disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-rollo-pink px-6 font-semibold text-white shadow-rollo-pink transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost / outline secondary — for "Add more items", "Back to start". */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-transparent px-5 font-semibold text-rollo-ink transition active:scale-[0.98] disabled:opacity-50;
+  }
+
+  /* Standard 22-radius white card with the soft pink-tinted shadow. */
+  .card-rollo {
+    @apply rounded-rollo-card bg-rollo-card shadow-rollo-card;
   }
 
   /*
    * Hide Clover.js injected branding that bleeds into the page DOM
-   * outside its own iframes. Clover injects a "Secure Payments Powered
-   * by Clover" header and a "Privacy Policy" link as plain DOM nodes
-   * (not inside the cross-origin iframe), and they show up as ghosted
-   * text behind our payment box. We hide them with attribute selectors
-   * because the SDK doesn't give them stable class names.
+   * outside its own iframes. Kept from previous iteration.
    */
   [class*="clover"][class*="powered"],
   [class*="clover"][class*="privacy"],
@@ -38,15 +49,16 @@
   div[style*="position: fixed"][style*="opacity: 0"] {
     display: none !important;
   }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border-2 border-rollo-ink/15 bg-white px-5 py-2.5 font-semibold text-rollo-ink transition hover:border-rollo-pink hover:text-rollo-pink;
-  }
-  .badge-green {
-    @apply inline-flex rounded-full bg-rollo-green/15 px-2.5 py-1 text-xs font-semibold text-rollo-green;
-  }
-  .card {
-    @apply rounded-3xl bg-white p-4 shadow-sm ring-1 ring-rollo-ink/5;
-  }
 }
 
+@layer utilities {
+  /* Hide native scrollbars on horizontal scrollers (category chips,
+     featured carousel) without losing scroll behavior. */
+  .scroll-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
