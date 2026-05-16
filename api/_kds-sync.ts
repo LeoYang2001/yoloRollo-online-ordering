@@ -90,6 +90,10 @@ export interface SyncResult {
   existingSkipped: number;
   /** Newly written to Firestore. */
   added: number;
+  /** Writes that threw (e.g. Firestore quota or auth errors). */
+  writeFailed?: number;
+  /** First write-error message we hit — surfaces silent Firestore failures. */
+  writeError?: string;
   /** Order ids we wrote (for debugging). Empty in cached results. */
   addedIds?: string[];
   /** Error from the Clover/Firestore round-trip, if any. */
@@ -219,6 +223,8 @@ async function doSync(): Promise<SyncResult> {
 
   const db = firestore();
   let existingSkipped = 0;
+  let writeFailed = 0;
+  let writeError: string | undefined;
   const addedIds: string[] = [];
 
   // Run the existence checks + writes in parallel. We previously also
@@ -233,20 +239,20 @@ async function doSync(): Promise<SyncResult> {
   await Promise.all(
     paid.map(async (order) => {
       const docRef = db.collection("tickets").doc(order.id);
-      const existing = await docRef.get();
-      if (existing.exists) {
-        existingSkipped++;
-        return;
-      }
-      const doc = buildDoc(order, groupNames);
       try {
+        const existing = await docRef.get();
+        if (existing.exists) {
+          existingSkipped++;
+          return;
+        }
+        const doc = buildDoc(order, groupNames);
         await docRef.set(doc, { merge: true });
         addedIds.push(order.id);
       } catch (writeErr) {
-        console.warn(
-          `[kds-sync] write failed for ${order.id}:`,
-          (writeErr as Error).message,
-        );
+        writeFailed++;
+        const msg = (writeErr as Error).message;
+        if (!writeError) writeError = msg;
+        console.warn(`[kds-sync] write failed for ${order.id}:`, msg);
       }
     }),
   );
@@ -258,6 +264,8 @@ async function doSync(): Promise<SyncResult> {
     paidOrders: paid.length,
     existingSkipped,
     added: addedIds.length,
+    writeFailed,
+    writeError,
     addedIds,
   };
   lastResult = { ts: now, result };
