@@ -308,7 +308,13 @@ export function Confirmation() {
           </Sticker>
         </div>
 
-        <div className="relative mt-3 text-center font-display text-[88px] font-extrabold leading-[0.9] tracking-[-0.04em] text-white">
+        {/*
+          Ticket font is responsive: clamp scales from 56px on narrow
+          mobile (so "#XXXXXX" fits without overflowing the pink card)
+          up to 88px on tablet+ where there's room for the hero look.
+          Was a flat text-[88px] before — overflowed iPhone-width.
+        */}
+        <div className="relative mt-3 text-center font-display text-[clamp(56px,14vw,88px)] font-extrabold leading-[0.9] tracking-[-0.04em] text-white">
           {ticket}
         </div>
         <div className="relative mt-2 text-center font-body text-sm text-white/90">

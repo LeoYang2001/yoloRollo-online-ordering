@@ -249,23 +249,37 @@ export default async function handler(
         // for support lookups.
         customer: {},
         shoppingCart: {
-          // Append the cid to the FIRST line item's note as `· ref:XXX`
-          // so the lookup endpoint can find it by scanning recent
-          // orders' line items. Kitchen briefly sees the ref tail but
-          // ignores it.
-          lineItems: body.lines.map((l, i) => {
-            const noteParts = [
-              l.modifiers.map((m) => m.name).join(", "),
-              l.notes,
-            ].filter(Boolean);
-            if (i === 0) noteParts.push(`ref:${cid}`);
-            return {
-              name: l.itemName,
-              unitQty: l.quantity,
-              price: dollarsToCents(l.unitPrice),
-              note: noteParts.join(" · ") || undefined,
-            };
-          }),
+          // Real cart items, plus a single "Tax" line. Clover Hosted
+          // Checkout doesn't apply tax automatically from what we
+          // send — it just charges sum(price × unitQty) — so without
+          // this line the customer would be charged the subtotal
+          // only, less than what our /checkout Pay button promised.
+          // Adding it as a line item shows up on the receipt + KDS
+          // as a separate "Tax" line.
+          //
+          // We also append the cid to the FIRST product line's note
+          // (`· ref:XXX`) so the lookup endpoint can find this order
+          // by scanning recent orders' line items.
+          lineItems: [
+            ...body.lines.map((l, i) => {
+              const noteParts = [
+                l.modifiers.map((m) => m.name).join(", "),
+                l.notes,
+              ].filter(Boolean);
+              if (i === 0) noteParts.push(`ref:${cid}`);
+              return {
+                name: l.itemName,
+                unitQty: l.quantity,
+                price: dollarsToCents(l.unitPrice),
+                note: noteParts.join(" · ") || undefined,
+              };
+            }),
+            {
+              name: "Tax",
+              unitQty: 1,
+              price: dollarsToCents(tax),
+            },
+          ],
         },
         // Sent as a second cid channel. We don't know whether Clover
         // persists this onto the resulting order's queryable fields —
