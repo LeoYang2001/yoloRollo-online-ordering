@@ -457,29 +457,24 @@ function SectionHeader({
 }
 
 // ─── Modifier color coding ──────────────────────────────────────────
-// Bolder palette so staff can't mistake a mix-in for a topping while
-// plating. Each group gets a saturated background, a high-contrast
-// foreground, and a colored left border for an extra visual cue.
+// Color the modifier line based on its group name so kitchen staff
+// don't confuse a mix-in for a topping while plating. Distinct hues
+// + high contrast against the dark KDS card. Falls back to neutral
+// gray for unknown groups so a missing/unexpected group name doesn't
+// turn into invisible text.
 function modifierStyle(group: string | undefined): {
   bg: string;
   text: string;
-  border: string;
   label: string;
 } {
   const g = (group ?? "").toLowerCase();
-  if (g.includes("mix"))
-    return { bg: "bg-pink-500/30", text: "text-pink-100", border: "border-pink-400", label: "MIX-IN" };
-  if (g.includes("top"))
-    return { bg: "bg-amber-500/30", text: "text-amber-100", border: "border-amber-400", label: "TOPPING" };
-  if (g.includes("base"))
-    return { bg: "bg-sky-500/30", text: "text-sky-100", border: "border-sky-400", label: "BASE" };
-  if (g.includes("boba"))
-    return { bg: "bg-violet-500/30", text: "text-violet-100", border: "border-violet-400", label: "BOBA" };
-  if (g.includes("size"))
-    return { bg: "bg-zinc-600/40", text: "text-zinc-100", border: "border-zinc-400", label: "SIZE" };
-  if (g.includes("sweet"))
-    return { bg: "bg-rose-500/30", text: "text-rose-100", border: "border-rose-400", label: "SWEET" };
-  return { bg: "bg-zinc-700/40", text: "text-zinc-100", border: "border-zinc-500", label: (group || "ADD-ON").toUpperCase() };
+  if (g.includes("mix")) return { bg: "bg-pink-500/15", text: "text-pink-300", label: "Mix-in" };
+  if (g.includes("top")) return { bg: "bg-amber-500/15", text: "text-amber-300", label: "Topping" };
+  if (g.includes("base")) return { bg: "bg-sky-500/15", text: "text-sky-300", label: "Base" };
+  if (g.includes("boba")) return { bg: "bg-violet-500/15", text: "text-violet-300", label: "Boba" };
+  if (g.includes("size")) return { bg: "bg-zinc-700/40", text: "text-zinc-300", label: "Size" };
+  if (g.includes("sweet")) return { bg: "bg-rose-500/15", text: "text-rose-300", label: "Sweet" };
+  return { bg: "bg-zinc-700/40", text: "text-zinc-300", label: group || "Add-on" };
 }
 
 // ─── Single ticket card ─────────────────────────────────────────────
@@ -550,39 +545,28 @@ function TicketCard({
                 </div>
                 {/* Structured modifiers with color-coded chips so
                     staff can tell mix-ins from toppings at a glance.
-                    One row per modifier (stacked) so each reads
-                    clearly at counter-height — packed wrap gets eye-
-                    crowded when there are 3-4 mods on one ticket.
-                    Falls back to the legacy flat string only if the
-                    sync hasn't backfilled mods[] yet. */}
+                    Falls back to the legacy flat string if a ticket
+                    was synced before mods[] was captured. */}
                 {it.mods && it.mods.length > 0 ? (
-                  <div className="mt-2 flex flex-col gap-1.5">
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {it.mods.map((mod, mi) => {
                       const s = modifierStyle(mod.g);
                       return (
-                        <div
+                        <span
                           key={mi}
-                          className={`flex items-center gap-2.5 rounded-lg border-l-4 px-3 py-1.5 ${s.bg} ${s.border}`}
+                          className={`inline-flex items-baseline gap-1.5 rounded-md px-2 py-0.5 text-sm font-semibold ${s.bg} ${s.text}`}
                         >
-                          <span
-                            className={`min-w-[68px] text-[11px] font-extrabold uppercase tracking-wider ${s.text} opacity-80`}
-                          >
+                          <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">
                             {s.label}
                           </span>
-                          <span
-                            className={`flex-1 text-base font-bold leading-tight ${s.text}`}
-                          >
-                            {mod.n}
-                          </span>
-                        </div>
+                          <span>{mod.n}</span>
+                        </span>
                       );
                     })}
                   </div>
                 ) : (
                   it.m && (
-                    <div className="mt-1.5 text-base text-zinc-300">
-                      {it.m}
-                    </div>
+                    <div className="mt-1 text-sm text-zinc-400">{it.m}</div>
                   )
                 )}
               </div>
