@@ -27,7 +27,19 @@ import { cloverRest } from "./_clover.js";
 import { firestore, type KdsTicketDoc } from "./_firebase.js";
 
 const SYNC_TTL_MS = 5_000;
-const LOOKBACK_MS = 15 * 60 * 1000;
+/**
+ * How far back the sync scans for paid Clover orders that may need to
+ * be brought into Firestore. Wider than the queue / status endpoints'
+ * 15-min "kitchen load" window — those concern current prep capacity,
+ * but the SYNC just needs to find orders that haven't been mirrored
+ * yet. 60 min gives plenty of headroom to catch in-store sales that
+ * existed before a deploy or after a brief outage.
+ *
+ * Safe to widen further (e.g. 4h, 8h) — the per-doc `exists` guard
+ * inside `doSync()` prevents overwriting already-mirrored tickets.
+ * The only cost is a slightly larger Clover payload per sync.
+ */
+const LOOKBACK_MS = 60 * 60 * 1000;
 
 interface CloverOrder {
   id: string;
