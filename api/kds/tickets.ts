@@ -39,20 +39,29 @@ export default async function handler(
   }
   res.setHeader("Cache-Control", "no-store");
 
+  // Surface any sync error in the response (in addition to logging)
+  // so we can debug from the browser without digging through Vercel
+  // logs. The KDS UI ignores `_debug`.
+  let debugSyncError: string | undefined;
+  let debugSyncResult: { scanned: number; added: number } | undefined;
   try {
     // Pull any paid Clover orders that haven't been recorded in
     // Firestore yet (online webhook orders are usually already in;
     // this catches in-store cash-register sales). 5s in-memory cache
     // keeps cost low when the KDS is polling rapidly.
     try {
-      const { added } = await syncCloverToFirestore();
-      if (added > 0) console.log(`[kds/tickets] synced ${added} new tickets from Clover`);
+      debugSyncResult = await syncCloverToFirestore();
+      if (debugSyncResult.added > 0)
+        console.log(
+          `[kds/tickets] synced ${debugSyncResult.added} new tickets from Clover`,
+        );
     } catch (e) {
       // Non-fatal — if Clover is down the KDS still reads whatever
       // Firestore already has and the board keeps working.
+      debugSyncError = (e as Error).message;
       console.warn(
         "[kds/tickets] Clover sync failed (non-fatal):",
-        (e as Error).message,
+        debugSyncError,
       );
     }
 
@@ -100,7 +109,10 @@ export default async function handler(
       // expects (leftmost = next to make).
       .sort((a, b) => a.createdAtMs - b.createdAtMs);
 
-    return res.status(200).json({ tickets });
+    return res.status(200).json({
+      tickets,
+      _debug: { syncError: debugSyncError, syncResult: debugSyncResult },
+    });
   } catch (err) {
     console.error("[kds/tickets]", err);
     return res.status(500).json({ error: (err as Error).message });
