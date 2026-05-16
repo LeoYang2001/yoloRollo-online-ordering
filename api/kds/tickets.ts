@@ -39,34 +39,44 @@ export default async function handler(
   res.setHeader("Cache-Control", "no-store");
 
   try {
+    // No `orderBy("createdAt")` here — combining it with a `where in`
+    // requires a Firestore composite index that we'd have to provision
+    // separately. We instead sort the small result set (≤50 rows) in
+    // JS below, which is plenty fast for a kitchen board.
     const snap = await firestore()
       .collection("tickets")
       .where("status", "in", ["queued", "in_progress"])
-      .orderBy("createdAt", "asc")
       .limit(50)
       .get();
 
     const now = Date.now();
-    const tickets: ResponseTicket[] = snap.docs.map((d: { data(): unknown }) => {
-      const data = d.data() as KdsTicketDoc;
-      // createdAt is a Firestore Timestamp once persisted; in transit
-      // we treat it as having .toMillis().
-      const createdAt = data.createdAt as { toMillis?: () => number } | null;
-      const createdAtMs =
-        createdAt && typeof createdAt.toMillis === "function"
-          ? createdAt.toMillis()
-          : 0;
-      return {
-        orderId: data.orderId,
-        ticketNumber: data.ticketNumber,
-        customerName: data.customerName,
-        items: data.items ?? [],
-        status: data.status === "in_progress" ? "in_progress" : "queued",
-        createdAtMs,
-        elapsedSec: createdAtMs ? Math.floor((now - createdAtMs) / 1000) : 0,
-        total: data.total,
-      };
-    });
+    const tickets: ResponseTicket[] = snap.docs
+      .map((d: { data(): unknown }) => {
+        const data = d.data() as KdsTicketDoc;
+        // createdAt is a Firestore Timestamp once persisted; in transit
+        // we treat it as having .toMillis().
+        const createdAt = data.createdAt as { toMillis?: () => number } | null;
+        const createdAtMs =
+          createdAt && typeof createdAt.toMillis === "function"
+            ? createdAt.toMillis()
+            : 0;
+        return {
+          orderId: data.orderId,
+          ticketNumber: data.ticketNumber,
+          customerName: data.customerName,
+          items: data.items ?? [],
+          status:
+            data.status === "in_progress" ? "in_progress" : "queued",
+          createdAtMs,
+          elapsedSec: createdAtMs
+            ? Math.floor((now - createdAtMs) / 1000)
+            : 0,
+          total: data.total,
+        };
+      })
+      // Oldest first — matches the FIFO prep order the KDS card grid
+      // expects (leftmost = next to make).
+      .sort((a, b) => a.createdAtMs - b.createdAtMs);
 
     return res.status(200).json({ tickets });
   } catch (err) {
