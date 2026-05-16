@@ -51,6 +51,12 @@ let _db: Firestore | null = null;
 export function firestore(): Firestore {
   if (_db) return _db;
   _db = getFirestore(init());
+  // Allow `undefined` values to be silently stripped on write. Without
+  // this, any optional field that's not set (e.g. a modifier whose
+  // group we couldn't resolve) crashes the entire `.set()` call:
+  //   "Cannot use \"undefined\" as a Firestore value (found in field …)"
+  // We'd rather drop the missing field than lose the whole ticket.
+  _db.settings({ ignoreUndefinedProperties: true });
   return _db;
 }
 
