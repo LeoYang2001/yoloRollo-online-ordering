@@ -101,8 +101,14 @@ async function doSync(): Promise<SyncResult> {
 
   let data: { elements?: CloverOrder[] };
   try {
+    // CRITICAL: `expand=payments` is required. Without it the orders
+    // list returns a stale `paymentState: "OPEN"` for every order
+    // regardless of whether payment actually succeeded. The same gotcha
+    // bit /api/orders/[orderId]/status.ts. We have to expand payments
+    // to force Clover to compute the real paymentState. (lineItems is
+    // needed by buildDoc to populate the ticket card.)
     data = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?expand=lineItems&${filter}&limit=100`,
+      `/orders?expand=lineItems,payments&${filter}&limit=100`,
     );
   } catch (err) {
     const result: SyncResult = {
