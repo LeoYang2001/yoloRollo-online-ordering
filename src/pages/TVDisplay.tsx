@@ -74,10 +74,12 @@ export function TVDisplay() {
     ready: [],
     asOf: new Date().toISOString(),
   });
-  // True once the staff has tapped to enable audio. Browsers block
-  // speechSynthesis until user gesture happens on the page, so we
-  // show an "Enable announcements" overlay on first load.
-  const [announceEnabled, setAnnounceEnabled] = useState(false);
+  // True once the browser's autoplay block has been lifted by some
+  // user gesture on the page. We auto-prime via a one-shot document
+  // listener (see effect below) so the staff doesn't need to find a
+  // button — opening the URL in any way + a single click anywhere
+  // unlocks it for the rest of the session.
+  const [audioPrimed, setAudioPrimed] = useState(false);
   // Track which ticket numbers we've already spoken so we don't
   // re-announce on every poll. Populated on first data arrival with
   // whatever's currently ready (so we don't shout out a backlog).
@@ -104,7 +106,10 @@ export function TVDisplay() {
     };
   }, []);
 
-  // Watch the ready list — speak any newly arrived ticket.
+  // Watch the ready list — speak any newly arrived ticket. Always
+  // attempts the announcement; if the browser hasn't been primed yet
+  // the first call is silently dropped and the prime effect below
+  // takes care of the next one once any user gesture lands.
   useEffect(() => {
     if (!seededRef.current) {
       // First payload: seed the "already announced" set with whatever's
@@ -114,14 +119,13 @@ export function TVDisplay() {
       seededRef.current = true;
       return;
     }
-    if (!announceEnabled) return;
     for (const t of data.ready) {
       if (!announcedRef.current.has(t.ticketNumber)) {
         announcedRef.current.add(t.ticketNumber);
         announceReady(t.ticketNumber);
       }
     }
-  }, [data.ready, announceEnabled]);
+  }, [data.ready]);
 
   // Some browsers don't populate getVoices() synchronously; pre-warm
   // so the en-US voice is ready by the time the first announcement
@@ -135,6 +139,41 @@ export function TVDisplay() {
       window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
     };
   }, []);
+
+  // Auto-prime audio on the first user gesture anywhere on the page.
+  // Browsers (every modern one) block speechSynthesis until SOME
+  // user interaction happens, so we listen once for any click /
+  // keypress / touch / pointer event and fire a silent utterance to
+  // unlock the audio context. Listener removes itself after firing
+  // so it costs nothing for the rest of the session.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (audioPrimed) return;
+    const prime = () => {
+      try {
+        const u = new SpeechSynthesisUtterance(" ");
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+      } catch {
+        /* ignore — best effort */
+      }
+      setAudioPrimed(true);
+    };
+    // pointerdown beats click on touch; listen to a couple just in
+    // case the TV is operated by remote/keyboard.
+    const events: (keyof DocumentEventMap)[] = [
+      "pointerdown",
+      "click",
+      "keydown",
+      "touchstart",
+    ];
+    for (const e of events) {
+      document.addEventListener(e, prime, { once: true, passive: true });
+    }
+    return () => {
+      for (const e of events) document.removeEventListener(e, prime);
+    };
+  }, [audioPrimed]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-rollo-pink text-white">
@@ -317,43 +356,24 @@ export function TVDisplay() {
           </div>
         </div>
 
-        {/* Bottom: exit affordance + audio toggle (right corner so
-            customers don't accidentally hit either). Audio toggle is
-            staff-only — first tap unlocks the browser's autoplay
-            block and starts announcing every new ready ticket. */}
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (announceEnabled) {
-                window.speechSynthesis?.cancel();
-                setAnnounceEnabled(false);
-                return;
-              }
-              // User-gesture unlock: speak an empty utterance to
-              // permission the audio context, then enable.
-              try {
-                const u = new SpeechSynthesisUtterance(" ");
-                u.volume = 0;
-                window.speechSynthesis.speak(u);
-              } catch {
-                /* ignore — best effort */
-              }
-              setAnnounceEnabled(true);
-            }}
-            aria-label={
-              announceEnabled
-                ? "Disable ticket announcements"
-                : "Enable ticket announcements"
-            }
+        {/* Bottom: passive audio status indicator + exit affordance.
+            Announcements are ALWAYS on (no toggle). The indicator
+            shows whether the browser's autoplay block is still in
+            effect so staff knows to tap the screen once if they
+            haven't already. After any user gesture anywhere on the
+            page the indicator flips to "Announcing" and stays there
+            for the rest of the session. */}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <div
             className={`rounded-full px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition ${
-              announceEnabled
+              audioPrimed
                 ? "bg-rollo-butter text-rollo-ink shadow-md"
-                : "bg-white/20 text-white/90 hover:bg-white/30"
+                : "bg-white/20 text-white/90"
             }`}
+            aria-live="polite"
           >
-            {announceEnabled ? "🔊 Announcing on" : "🔇 Tap to announce"}
-          </button>
+            {audioPrimed ? "🔊 Announcing" : "🔇 Tap screen to enable sound"}
+          </div>
           <Button variant="dark" size="sm" onClick={() => navigate("/")}>
             ← Exit
           </Button>
