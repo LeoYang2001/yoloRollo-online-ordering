@@ -113,15 +113,19 @@ export function Confirmation() {
   // Hosted Checkout for this merchant ignores the {order_id}
   // placeholder AND doesn't auto-append), look up which order got
   // created for our checkout session id (stashed in sessionStorage
-  // before we redirected). The session→order mapping is set by the
-  // /api/clover/hosted-checkout-webhook handler in KV, so the
-  // typical lookup is one fast KV hit; we retry with backoff because
-  // the webhook may fire a beat AFTER the customer is already on
-  // this page.
+  // before we redirected).
+  //
+  // We also forward the Decision-C correlation id (cid) that the
+  // server embedded into the Clover order's customer.firstName when
+  // creating the Hosted Checkout session. The lookup endpoint's Path
+  // 2 uses it to pick the exact order from the recent-orders list
+  // rather than guessing by recency. If KV-via-webhook (Path 0) or
+  // Clover-session-GET (Path 1) succeeds first, cid is ignored.
   useEffect(() => {
     if (orderId) return;
     const sessionId = sessionStorage.getItem("yolo-rollo-pending-order");
     if (!sessionId || sessionId.startsWith("{")) return;
+    const cid = sessionStorage.getItem("yolo-rollo-correlation-id") ?? "";
 
     let cancelled = false;
     // Try at 0, 0.7, 1.5, 2.5, 4, 6, 9, 13s — total ~13s of patience.
@@ -130,9 +134,10 @@ export function Confirmation() {
     const tryFetch = async (attempt: number) => {
       if (cancelled || attempt >= delays.length) return;
       try {
-        const r = await fetch(
-          `/api/checkout-session/${encodeURIComponent(sessionId)}`,
-        );
+        const url =
+          `/api/checkout-session/${encodeURIComponent(sessionId)}` +
+          (cid ? `?cid=${encodeURIComponent(cid)}` : "");
+        const r = await fetch(url);
         if (!r.ok) throw new Error(String(r.status));
         const data = (await r.json()) as { orderId?: string | null };
         if (cancelled) return;

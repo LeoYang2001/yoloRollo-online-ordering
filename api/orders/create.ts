@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "node:crypto";
 import type { OrderRequest, OrderResponse } from "../../src/types";
 import {
   cloverCharge,
@@ -213,19 +214,35 @@ export default async function handler(
     });
   }
 
+  // Decision C: generate an 8-char correlation id and embed it in two
+  // places on the Clover order so /api/checkout-session/[id]?cid=... can
+  // find the resulting paid order in the recent-orders list.
+  //   - customer.firstName = cid           (almost certainly survives;
+  //                                         visible briefly to kitchen
+  //                                         but overridden by the
+  //                                         "Online: <name>" title
+  //                                         rename Confirmation.tsx does)
+  //   - merchantMetadata.correlationId     (cleaner channel; may or may
+  //                                         not flow through — we use it
+  //                                         opportunistically and fall
+  //                                         back to customer.firstName)
+  const cid = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+
   try {
     const checkout = await cloverHostedCheckout<{
       href: string;
       checkoutSessionId: string;
     }>(
       {
-        // Minimal customer block — Clover requires it non-null, but we
-        // omit firstName / lastName / phoneNumber so they don't pre-fill
-        // the cardholder name (the name we collected is the pickup-ticket
-        // label, NOT the cardholder) and don't trigger Apple Pay's
-        // shipping-contact prompt. Email is forwarded so Clover can send
-        // the receipt.
+        // We DO populate firstName/lastName now (Decision C) because we
+        // need firstName as our correlation-id carrier. lastName holds
+        // the customer's real name so it's not lost; Clover may pre-fill
+        // it on the receipt. The "Online: <name>" title rename in
+        // Confirmation.tsx writes the order title separately, so what
+        // the kitchen ticket shows is unaffected once that fires.
         customer: {
+          firstName: cid,
+          lastName: body.customerName,
           email: body.customerEmail || undefined,
         },
         shoppingCart: {
@@ -239,15 +256,17 @@ export default async function handler(
                 .join(" — ") || undefined,
           })),
         },
-        // Stored on the Clover order's metadata — visible in dashboard
-        // and used by the Confirmation page to update the order title
-        // post-payment.
+        // Stored on the Clover order's metadata. Whether `correlationId`
+        // actually flows through to the resulting order's queryable
+        // fields is unknown — Clover doesn't document this. The lookup
+        // endpoint tries both metadata-match and customer.firstName-match.
         merchantMetadata: {
           fulfillment: "pickup",
           source: "yolo-rollo-web",
           customerName: body.customerName,
           customerPhone: body.customerPhone || "",
           customerEmail: body.customerEmail || "",
+          correlationId: cid,
         },
       },
       {
@@ -255,9 +274,9 @@ export default async function handler(
         // NOT substitute {order_id} placeholders and does NOT auto-
         // append order_id to the success URL either. We keep the URL
         // plain — the Confirmation page detects the missing orderId
-        // and looks it up via /api/checkout-session/{sessionId} using
-        // the sessionId we stashed in sessionStorage before the
-        // redirect.
+        // and looks it up via /api/checkout-session/{sessionId}?cid=…
+        // using the sessionId + cid we stashed in sessionStorage
+        // before the redirect.
         success: `${base}/confirmation`,
         failure: `${base}/checkout?error=payment_failed`,
       },
@@ -266,12 +285,13 @@ export default async function handler(
     return res.status(200).json({
       // No real order ID yet — Clover hasn't created one. We surface
       // the session id as a placeholder so the existing OrderResponse
-      // shape stays the same; the client doesn't actually use it
-      // (the redirect carries the user away before this matters).
+      // shape stays the same; the lookup endpoint exchanges it (+ cid)
+      // for the real orderId after Clover finishes processing payment.
       orderId: checkout.checkoutSessionId,
       ticketNumber: "—",
       checkoutUrl: checkout.href,
       totals: { subtotal, tax, total },
+      correlationId: cid,
     } satisfies OrderResponse);
   } catch (err) {
     console.error("[orders/create] hosted checkout failed:", err);
