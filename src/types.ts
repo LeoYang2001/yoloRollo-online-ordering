@@ -64,6 +64,11 @@ export interface CartLine {
   /** Selected from MenuItem.flavor at add-time, kept so the cart line
    *  can render the same gradient swatch without re-fetching the menu. */
   flavor?: FlavorKey;
+  /** Real product photo URL (e.g. /signatures/yolo_1.png). Carried into
+   *  the cart line at add-time so CartItem can show the same image the
+   *  user saw on the menu/modal — signature + Yolo Signature rolls have
+   *  these; everything else falls back to the flavor gradient swatch. */
+  imageUrl?: string;
 }
 
 export interface OrderRequest {

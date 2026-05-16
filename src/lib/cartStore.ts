@@ -49,6 +49,11 @@ export const useCart = create<CartState>()(
           // Carry the flavor key into the cart line so CartItem can render
           // the same gradient swatch the user saw on the menu.
           flavor: item.flavor ?? inferFlavor(item.name),
+          // Carry the synthesized imageUrl (set by Menu.tsx's enrich())
+          // so CartItem can show the same real photo for signature +
+          // Yolo Signature rolls. Undefined for items without a photo —
+          // those still render the gradient swatch via flavor.
+          imageUrl: item.imageUrl,
         };
         set({ lines: [...get().lines, line] });
       },

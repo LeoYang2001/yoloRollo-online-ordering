@@ -70,7 +70,11 @@ export function CartItem({
     <div
       className={`flex items-center gap-3 border-b border-dashed border-rollo-ink-line last:border-b-0 ${compact ? "py-2.5" : "py-3.5"}`}
     >
-      <ProductPhoto flavor={line.flavor} size={compact ? 44 : 60} />
+      <ProductPhoto
+        imageUrl={line.imageUrl}
+        flavor={line.flavor}
+        size={compact ? 44 : 60}
+      />
 
       <div className="min-w-0 flex-1">
         <div className="truncate font-display text-sm font-bold text-rollo-ink">

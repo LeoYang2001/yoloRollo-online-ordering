@@ -18,7 +18,16 @@
       it to the hot pink makes iOS Safari's URL bar stay hot pink even
       after the user navigates back from Clover Hosted Checkout, which
       clashes with the soft-pink Sweet Sundae design.
+
+      Three tags pin it for every scenario:
+        1. light-mode browsers (most users)
+        2. dark-mode browsers (otherwise iOS falls back to a default
+           dark URL bar that doesn't match our pink palette)
+        3. unscoped fallback for browsers that don't understand the
+           media query
     -->
+    <meta name="theme-color" content="#FBE4ED" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#FBE4ED" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#FBE4ED" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" type="image/png" href="/icon.png" />
