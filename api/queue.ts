@@ -120,8 +120,14 @@ async function fetchQueueFromClover(): Promise<{
     //
     // Filter values containing `=` or `>` must be percent-encoded.
     const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
+    // IMPORTANT: `expand=payments` is required — without it Clover's
+    // order list returns a stale `paymentState: "OPEN"` for every
+    // order regardless of whether payment actually succeeded. Adding
+    // payments to the expansion forces the API to compute the real
+    // paymentState, so the .filter(paymentState === "PAID") below
+    // actually finds anything.
     const data = await cloverRest<CloverOrdersResponse>(
-      `/orders?expand=lineItems&${filter}&limit=100`,
+      `/orders?expand=lineItems,payments&${filter}&limit=100`,
     );
     const paid = (data.elements ?? []).filter(
       (o) => o.paymentState === "PAID",

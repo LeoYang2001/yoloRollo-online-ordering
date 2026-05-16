@@ -99,6 +99,14 @@ export function Checkout() {
       // and we need to rename it post-creation.
       sessionStorage.setItem("yolo-rollo-pending-order", order.orderId);
       sessionStorage.setItem("yolo-rollo-customer-name", name.trim());
+      // Decision C: the server passed a correlation id to Clover (as
+      // customer.firstName + merchantMetadata.correlationId). Stash it
+      // so the Confirmation page can hand it to
+      // /api/checkout-session/[id]?cid=... and locate the resulting
+      // paid order precisely instead of falling back to "most recent".
+      if (order.correlationId) {
+        sessionStorage.setItem("yolo-rollo-correlation-id", order.correlationId);
+      }
       window.location.href = order.checkoutUrl;
     } catch (err) {
       setError((err as Error).message ?? "Could not start payment.");

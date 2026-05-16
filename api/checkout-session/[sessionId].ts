@@ -2,39 +2,55 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { cloverConfig, cloverRest } from "../_clover.js";
 
 /**
- * GET /api/checkout-session/:sessionId
+ * GET /api/checkout-session/:sessionId?cid=…
  *
  * Look up which Clover order was created for a Hosted Checkout
  * session id. Called by the confirmation page when Clover redirected
  * us back without substituting the {order_id} placeholder in the
- * success URL — we use the sessionStorage-stashed sessionId to find
- * the real order ID after the fact.
+ * success URL — we use the sessionStorage-stashed sessionId (+ a
+ * server-generated correlation id `cid` that was embedded into the
+ * Clover order's customer.firstName) to find the real order ID after
+ * the fact.
  *
- * Three lookup paths, tried in order:
+ * Lookup paths, tried in order:
  *
- *   0. Vercel KV — fastest. Populated by
- *      /api/clover/hosted-checkout-webhook the moment Clover finishes
- *      processing payment. Hit rate ≈ 100% when KV is enabled AND
- *      the webhook is configured AND the customer landed on
- *      /confirmation a beat after the webhook fired.
+ *   0. Vercel KV — populated by /api/clover/hosted-checkout-webhook
+ *      if the webhook is wired up. Skipped automatically when KV
+ *      isn't provisioned or the webhook never fires.
  *
  *   1. GET /invoicingcheckoutservice/v1/checkouts/{sessionId} — the
  *      session resource on Clover's ecomm host. When a payment
  *      completes, Clover writes the orderId into the session record.
+ *      Undocumented but works on some merchants.
  *
- *   2. Fallback: list orders created in the last 5 min and pick the
- *      most recent paid one. Defensive — only kicks in if paths 0+1
- *      both miss.
+ *   2. Decision-C correlation match (preferred): list orders created
+ *      in the last 5 min with customers expanded, then filter to the
+ *      order whose customer.firstName === cid. Reliable and precise
+ *      because each /api/orders/create generates a unique cid.
+ *
+ *   3. Last-resort fallback: most-recent paid order in the last 5 min.
+ *      Only correct under no-concurrency; we tag the response so the
+ *      client (and logs) know we used this fuzzy path.
  *
  * Returns:
- *   { orderId: "ABC123XYZ4567", via: "webhook" | "session" | "recent" }
- *   { orderId: null,            via: "none" }
+ *   { orderId: "ABC123XYZ4567",
+ *     via: "webhook" | "session" | "cid-match" | "recent" }
+ *   { orderId: null, via: "none" }
  */
+
+interface CloverLineItem {
+  id?: string;
+  name?: string;
+  note?: string;
+}
 
 interface CloverOrder {
   id: string;
   paymentState?: string;
   createdTime?: number;
+  /** Populated when we query with ?expand=lineItems. The cid is
+   *  appended to the first line item's note as `· ref:XXXXXXXX`. */
+  lineItems?: { elements?: CloverLineItem[] };
 }
 
 export default async function handler(
@@ -45,6 +61,12 @@ export default async function handler(
   if (!sessionId) {
     return res.status(400).json({ error: "sessionId required" });
   }
+  // Decision-C correlation id. Server-generated 8-char token passed to
+  // Clover via customer.firstName + merchantMetadata.correlationId
+  // during /api/orders/create. The Confirmation page stashes it in
+  // sessionStorage and sends it back here so Path 2 can match the
+  // exact order rather than guess by recency.
+  const cid = ((req.query.cid as string) ?? "").trim() || undefined;
 
   const config = cloverConfig();
 
@@ -116,23 +138,55 @@ export default async function handler(
     );
   }
 
-  // ─── Path 2: scan recent paid orders ──────────────────────────
-  // Picks the most-recent paid order created in the last 5 minutes —
-  // matches the customer who just completed Hosted Checkout, in the
-  // overwhelming common case of one checkout-at-a-time. Multiple
-  // simultaneous checkouts could in theory cross wires, but that
-  // would be a very rare race for a counter shop.
+  // ─── Path 2: scan recent paid orders, prefer cid match ────────
+  // List orders created in the last 5 minutes with line items expanded.
+  // If a cid was passed, find the order whose first line item's note
+  // contains `ref:<cid>` (precise — each /api/orders/create generates
+  // a unique cid). Otherwise (or if cid match misses) fall back to the
+  // most-recent paid order, which is correct under no concurrency.
   try {
     const since = Date.now() - 5 * 60 * 1000;
     const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
+    // IMPORTANT: `expand=payments` is required — without it Clover's
+    // order list returns a stale `paymentState: "OPEN"` for every
+    // order regardless of whether payment succeeded. Adding payments
+    // to the expansion forces the API to compute the real
+    // paymentState. (lineItems is needed for the cid match.)
     const list = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?${filter}&limit=20`,
+      `/orders?${filter}&expand=lineItems,payments&limit=20`,
     );
-    const paid = (list.elements ?? [])
-      .filter((o) => o.paymentState === "PAID")
-      .sort((a, b) => (b.createdTime ?? 0) - (a.createdTime ?? 0));
-    if (paid[0]) {
-      return res.status(200).json({ orderId: paid[0].id, via: "recent" });
+    const all = list.elements ?? [];
+
+    if (cid) {
+      // Match against ALL recent orders, not just `paid`. The cid is
+      // unique-per-checkout, so finding it on any order means that's
+      // ours — even on the off chance paymentState is mid-update.
+      const marker = `ref:${cid.toUpperCase()}`;
+      const exact = all.find((o) =>
+        o.lineItems?.elements?.some((li) =>
+          (li.note ?? "").toUpperCase().includes(marker),
+        ),
+      );
+      if (exact) {
+        console.log(
+          `[checkout-session] cid match cid=${cid} -> order=${exact.id} (paymentState=${exact.paymentState})`,
+        );
+        return res.status(200).json({ orderId: exact.id, via: "cid-match" });
+      }
+      console.warn(
+        `[checkout-session] cid=${cid} not found in last-5-min orders ` +
+          `(scanned ${all.length}). Falling back to most-recent paid.`,
+      );
+    }
+
+    const paid = all.filter((o) => o.paymentState === "PAID");
+    const mostRecent = [...paid].sort(
+      (a, b) => (b.createdTime ?? 0) - (a.createdTime ?? 0),
+    )[0];
+    if (mostRecent) {
+      return res
+        .status(200)
+        .json({ orderId: mostRecent.id, via: "recent" });
     }
   } catch (err) {
     console.warn(

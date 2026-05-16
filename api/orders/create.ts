@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "node:crypto";
 import type { OrderRequest, OrderResponse } from "../../src/types";
 import {
   cloverCharge,
@@ -213,41 +214,84 @@ export default async function handler(
     });
   }
 
+  // Decision C: generate an 8-char correlation id and embed it on the
+  // Hosted Checkout request so /api/checkout-session/[id]?cid=... can
+  // find the resulting paid order in the recent-orders list.
+  //
+  // We tried `customer.firstName = cid` first — turns out Clover
+  // pre-fills the customer-facing form with whatever we send there,
+  // so the customer saw "807A20CD" in the First Name field. Bad UX.
+  // Channels we use now (in order of cleanness):
+  //   - merchantMetadata.correlationId     (cleanest — invisible
+  //                                         everywhere; works only if
+  //                                         Clover exposes it on the
+  //                                         resulting order)
+  //   - First line item's note appended    (definitely survives onto
+  //     with ` · ref:<cid>`                 the order; visible to KDS
+  //                                         as a small suffix, low-noise)
+  const cid = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+
   try {
     const checkout = await cloverHostedCheckout<{
       href: string;
       checkoutSessionId: string;
     }>(
       {
-        // Minimal customer block — Clover requires it non-null, but we
-        // omit firstName / lastName / phoneNumber so they don't pre-fill
-        // the cardholder name (the name we collected is the pickup-ticket
-        // label, NOT the cardholder) and don't trigger Apple Pay's
-        // shipping-contact prompt. Email is forwarded so Clover can send
-        // the receipt.
-        customer: {
-          email: body.customerEmail || undefined,
-        },
+        // Leave the customer block empty — Clover requires it to be
+        // present (non-null) but all fields are optional. The "pickup
+        // name" we collected is just the kitchen-ticket label, not
+        // the cardholder; pre-filling Clover's First/Last/Email
+        // fields would either (1) mislead the customer into thinking
+        // we already have their card-billing info, or (2) overwrite
+        // what they actually want to type for the card. We keep the
+        // pickup name in merchantMetadata.customerName below so we
+        // still have it for the order's "Online: <name>" rename and
+        // for support lookups.
+        customer: {},
         shoppingCart: {
-          lineItems: body.lines.map((l) => ({
-            name: l.itemName,
-            unitQty: l.quantity,
-            price: dollarsToCents(l.unitPrice),
-            note:
-              [l.modifiers.map((m) => m.name).join(", "), l.notes]
-                .filter(Boolean)
-                .join(" — ") || undefined,
-          })),
+          // Real cart items, plus a single "Tax" line. Clover Hosted
+          // Checkout doesn't apply tax automatically from what we
+          // send — it just charges sum(price × unitQty) — so without
+          // this line the customer would be charged the subtotal
+          // only, less than what our /checkout Pay button promised.
+          // Adding it as a line item shows up on the receipt + KDS
+          // as a separate "Tax" line.
+          //
+          // We also append the cid to the FIRST product line's note
+          // (`· ref:XXX`) so the lookup endpoint can find this order
+          // by scanning recent orders' line items.
+          lineItems: [
+            ...body.lines.map((l, i) => {
+              const noteParts = [
+                l.modifiers.map((m) => m.name).join(", "),
+                l.notes,
+              ].filter(Boolean);
+              if (i === 0) noteParts.push(`ref:${cid}`);
+              return {
+                name: l.itemName,
+                unitQty: l.quantity,
+                price: dollarsToCents(l.unitPrice),
+                note: noteParts.join(" · ") || undefined,
+              };
+            }),
+            {
+              name: "Tax",
+              unitQty: 1,
+              price: dollarsToCents(tax),
+            },
+          ],
         },
-        // Stored on the Clover order's metadata — visible in dashboard
-        // and used by the Confirmation page to update the order title
-        // post-payment.
+        // Sent as a second cid channel. We don't know whether Clover
+        // persists this onto the resulting order's queryable fields —
+        // if it does, the lookup endpoint can match on it without
+        // touching line items at all. Free insurance.
         merchantMetadata: {
           fulfillment: "pickup",
           source: "yolo-rollo-web",
           customerName: body.customerName,
           customerPhone: body.customerPhone || "",
           customerEmail: body.customerEmail || "",
+          correlationId: cid,
         },
       },
       {
@@ -255,9 +299,9 @@ export default async function handler(
         // NOT substitute {order_id} placeholders and does NOT auto-
         // append order_id to the success URL either. We keep the URL
         // plain — the Confirmation page detects the missing orderId
-        // and looks it up via /api/checkout-session/{sessionId} using
-        // the sessionId we stashed in sessionStorage before the
-        // redirect.
+        // and looks it up via /api/checkout-session/{sessionId}?cid=…
+        // using the sessionId + cid we stashed in sessionStorage
+        // before the redirect.
         success: `${base}/confirmation`,
         failure: `${base}/checkout?error=payment_failed`,
       },
@@ -266,12 +310,13 @@ export default async function handler(
     return res.status(200).json({
       // No real order ID yet — Clover hasn't created one. We surface
       // the session id as a placeholder so the existing OrderResponse
-      // shape stays the same; the client doesn't actually use it
-      // (the redirect carries the user away before this matters).
+      // shape stays the same; the lookup endpoint exchanges it (+ cid)
+      // for the real orderId after Clover finishes processing payment.
       orderId: checkout.checkoutSessionId,
       ticketNumber: "—",
       checkoutUrl: checkout.href,
       totals: { subtotal, tax, total },
+      correlationId: cid,
     } satisfies OrderResponse);
   } catch (err) {
     console.error("[orders/create] hosted checkout failed:", err);

@@ -82,14 +82,22 @@ export interface OrderRequest {
 }
 
 export interface OrderResponse {
-  orderId: string;            // Clover order ID
+  orderId: string;            // Clover order ID (inline path) OR checkoutSessionId (hosted path)
   ticketNumber: string;       // short human-friendly number, e.g. "A-042"
-  checkoutUrl: string;        // Clover Hosted Checkout URL the user is redirected to
+  checkoutUrl: string;        // Clover Hosted Checkout URL the user is redirected to (or same-origin /confirmation/{id} for inline)
   totals: {
     subtotal: Money;
     tax: Money;
     total: Money;
   };
+  /**
+   * Hosted-checkout-only: 8-char correlation id that the server passes
+   * to Clover (as `customer.firstName` + `merchantMetadata.correlationId`)
+   * so the post-redirect `/api/checkout-session/[id]?cid=…` lookup can
+   * locate the resulting paid Clover order in the recent-orders list.
+   * Undefined on the inline-charge path (orderId is already known there).
+   */
+  correlationId?: string;
 }
 
 export interface OrderStatus {
