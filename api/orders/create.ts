@@ -231,26 +231,23 @@ export default async function handler(
   //                                         as a small suffix, low-noise)
   const cid = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
 
-  // Split the pickup name into first/last so Clover's Customer
-  // Information section pre-fills with something readable instead of
-  // an empty form or our cid. This is just the customer's pickup-
-  // ticket label, not the cardholder — Clover collects card details
-  // separately below it.
-  const nameParts = body.customerName.trim().split(/\s+/);
-  const customerFirstName = nameParts[0] || "Customer";
-  const customerLastName = nameParts.slice(1).join(" ") || undefined;
-
   try {
     const checkout = await cloverHostedCheckout<{
       href: string;
       checkoutSessionId: string;
     }>(
       {
-        customer: {
-          firstName: customerFirstName,
-          lastName: customerLastName,
-          email: body.customerEmail || undefined,
-        },
+        // Leave the customer block empty — Clover requires it to be
+        // present (non-null) but all fields are optional. The "pickup
+        // name" we collected is just the kitchen-ticket label, not
+        // the cardholder; pre-filling Clover's First/Last/Email
+        // fields would either (1) mislead the customer into thinking
+        // we already have their card-billing info, or (2) overwrite
+        // what they actually want to type for the card. We keep the
+        // pickup name in merchantMetadata.customerName below so we
+        // still have it for the order's "Online: <name>" rename and
+        // for support lookups.
+        customer: {},
         shoppingCart: {
           // Append the cid to the FIRST line item's note as `· ref:XXX`
           // so the lookup endpoint can find it by scanning recent
