@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { firestore, type KdsTicketDoc } from "../_firebase.js";
+import { syncCloverToFirestore } from "../_kds-sync.js";
 
 /**
  * GET /api/tv/display
@@ -75,6 +76,17 @@ export default async function handler(
 
   const now = Date.now();
   const readyCutoff = now - READY_WINDOW_MS;
+
+  // Sync newly-paid Clover orders into Firestore before reading. The
+  // helper has its own 5s TTL so this is cheap when called every 3s.
+  try {
+    await syncCloverToFirestore();
+  } catch (e) {
+    console.warn(
+      "[tv/display] Clover sync failed (non-fatal):",
+      (e as Error).message,
+    );
+  }
 
   try {
     const db = firestore();

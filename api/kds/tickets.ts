@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { firestore, type KdsTicketDoc } from "../_firebase.js";
+import { syncCloverToFirestore } from "../_kds-sync.js";
 import { tokenFromRequest, verifyToken } from "./_session.js";
 
 /**
@@ -39,6 +40,22 @@ export default async function handler(
   res.setHeader("Cache-Control", "no-store");
 
   try {
+    // Pull any paid Clover orders that haven't been recorded in
+    // Firestore yet (online webhook orders are usually already in;
+    // this catches in-store cash-register sales). 5s in-memory cache
+    // keeps cost low when the KDS is polling rapidly.
+    try {
+      const { added } = await syncCloverToFirestore();
+      if (added > 0) console.log(`[kds/tickets] synced ${added} new tickets from Clover`);
+    } catch (e) {
+      // Non-fatal — if Clover is down the KDS still reads whatever
+      // Firestore already has and the board keeps working.
+      console.warn(
+        "[kds/tickets] Clover sync failed (non-fatal):",
+        (e as Error).message,
+      );
+    }
+
     // No `orderBy("createdAt")` here — combining it with a `where in`
     // requires a Firestore composite index that we'd have to provision
     // separately. We instead sort the small result set (≤50 rows) in
