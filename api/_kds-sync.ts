@@ -38,12 +38,12 @@ const MAX_LOOKBACK_MS = 18 * 60 * 60 * 1000; // 18 hours
 
 interface CloverModification {
   name?: string;
-  /** The parent modifier group's name, e.g. "Base" / "Mix-in" /
-   *  "Topping" / "Boba". Used to color-code in the KDS UI so staff
-   *  don't mistake a mix-in for a topping. Clover surfaces this on
-   *  the modifier nested under modification when we expand
-   *  `lineItems.modifications.modifier`. */
-  modifier?: { name?: string; modifierGroup?: { id?: string; name?: string } };
+  /** The modifier (full object when we expand
+   *  `lineItems.modifications.modifier`). Clover caps expand depth at
+   *  3 levels, so we can't directly expand modifierGroup here — it
+   *  comes back as a `{id}` reference, and we resolve the group NAME
+   *  via a separate cached fetch (`getModifierGroupNames()`). */
+  modifier?: { id?: string; name?: string; modifierGroup?: { id?: string } };
   /** Some accounts populate alternativeName directly. */
   alternativeName?: string;
 }
@@ -91,6 +91,50 @@ export interface SyncResult {
 let lastResult: { ts: number; result: SyncResult } | null = null;
 let inFlight: Promise<SyncResult> | null = null;
 
+// ─── Modifier-group name lookup ───────────────────────────────────
+// Clover returns `modification.modifier.modifierGroup` as a bare
+// `{id}` reference (because expand depth is capped at 3). To color-
+// code mix-ins vs toppings vs base on the KDS we need the GROUP
+// NAME, so we fetch all modifier groups once an hour and cache an
+// id → name map per function instance.
+interface CloverModifierGroup {
+  id: string;
+  name: string;
+}
+const GROUP_NAMES_TTL_MS = 60 * 60 * 1000;
+let groupNamesCache: { ts: number; map: Map<string, string> } | null = null;
+let groupNamesInFlight: Promise<Map<string, string>> | null = null;
+
+export async function getModifierGroupNames(): Promise<Map<string, string>> {
+  const now = Date.now();
+  if (groupNamesCache && now - groupNamesCache.ts < GROUP_NAMES_TTL_MS) {
+    return groupNamesCache.map;
+  }
+  if (groupNamesInFlight) return groupNamesInFlight;
+  groupNamesInFlight = (async () => {
+    try {
+      const data = await cloverRest<{ elements?: CloverModifierGroup[] }>(
+        `/modifier_groups?limit=200`,
+      );
+      const map = new Map<string, string>();
+      for (const g of data.elements ?? []) {
+        if (g.id && g.name) map.set(g.id, g.name);
+      }
+      groupNamesCache = { ts: now, map };
+      return map;
+    } catch (err) {
+      console.warn(
+        "[kds-sync] modifier-groups fetch failed:",
+        (err as Error).message,
+      );
+      return groupNamesCache?.map ?? new Map<string, string>();
+    } finally {
+      groupNamesInFlight = null;
+    }
+  })();
+  return groupNamesInFlight;
+}
+
 /**
  * Run a Clover→Firestore sync. Coalesces concurrent calls — if two
  * requests land within the same TTL window, they share one Clover
@@ -134,8 +178,15 @@ async function doSync(): Promise<SyncResult> {
     // ("Mix-in" vs "Topping" etc.). The KDS uses that group name to
     // color-code the modifier lines so staff don't confuse one with
     // another while plating.
+    // Clover caps expand depth at 3, so we stop at
+    // `lineItems.modifications.modifier`. The modifier carries a
+    // `modifierGroup: {id}` reference but not the group name — that's
+    // resolved via the cached `getModifierGroupNames()` lookup we
+    // run alongside, then merged in buildDoc(). The 4-level form
+    // that included `.modifierGroup` returned HTTP 400 and broke
+    // every sync until this fix.
     data = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?expand=lineItems.modifications.modifier.modifierGroup,payments&${filter}&limit=200`,
+      `/orders?expand=lineItems.modifications.modifier,payments&${filter}&limit=200`,
     );
   } catch (err) {
     const result: SyncResult = {
@@ -154,6 +205,10 @@ async function doSync(): Promise<SyncResult> {
   const allOrders = data.elements ?? [];
   const paid = allOrders.filter((o) => o.paymentState === "PAID");
 
+  // Look up modifier-group names (id → "Mix-in" / "Topping" / etc.).
+  // Cached for an hour, so this is normally a free no-op.
+  const groupNames = await getModifierGroupNames();
+
   const db = firestore();
   let existingSkipped = 0;
   const addedIds: string[] = [];
@@ -165,7 +220,7 @@ async function doSync(): Promise<SyncResult> {
     paid.map(async (order) => {
       const docRef = db.collection("tickets").doc(order.id);
       const existing = await docRef.get();
-      const doc = buildDoc(order);
+      const doc = buildDoc(order, groupNames);
       if (existing.exists) {
         // Don't overwrite status/completedAt/createdAt — staff may
         // have marked it in_progress or completed. But DO refresh
@@ -214,8 +269,14 @@ async function doSync(): Promise<SyncResult> {
   return result;
 }
 
-/** Translate a Clover order into the KdsTicketDoc shape Firestore stores. */
-function buildDoc(order: CloverOrder): KdsTicketDoc {
+/** Translate a Clover order into the KdsTicketDoc shape Firestore stores.
+ *  `groupNames` maps `modifierGroup.id → name` and is used to attach
+ *  the parent group label to each modification (e.g. "Mix-in", "Topping")
+ *  for KDS color-coding. Passed in so callers can share the cached map. */
+function buildDoc(
+  order: CloverOrder,
+  groupNames: Map<string, string>,
+): KdsTicketDoc {
   const title = order.title?.trim() ?? "";
   // Distinguish source visually: "Online: Leo" → just "Leo" so the
   // first-name shows on the card. Numeric POS titles ("01", "07") get
@@ -235,11 +296,18 @@ function buildDoc(order: CloverOrder): KdsTicketDoc {
     // Structured modifier list: each entry carries the modifier
     // name (e.g. "Oreo") AND its modifier-group name (e.g. "Mix-in"),
     // so the KDS can color-code mix-ins vs toppings vs base vs boba.
+    // Group name is resolved via the cached id → name map (Clover
+    // doesn't return the name inline because of expand-depth limits).
     const mods = (li.modifications?.elements ?? [])
       .map((mod) => {
-        const name = (mod.name ?? mod.alternativeName ?? mod.modifier?.name ?? "")
-          .trim();
-        const group = (mod.modifier?.modifierGroup?.name ?? "").trim();
+        const name = (
+          mod.name ??
+          mod.alternativeName ??
+          mod.modifier?.name ??
+          ""
+        ).trim();
+        const groupId = mod.modifier?.modifierGroup?.id;
+        const group = groupId ? groupNames.get(groupId) : undefined;
         return name ? { n: name, g: group || undefined } : null;
       })
       .filter(Boolean) as { n: string; g?: string }[];

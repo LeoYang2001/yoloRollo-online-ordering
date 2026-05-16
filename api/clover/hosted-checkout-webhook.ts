@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { cloverRest } from "../_clover.js";
 import { firestore, type KdsTicketDoc } from "../_firebase.js";
+import { getModifierGroupNames } from "../_kds-sync.js";
 
 /**
  * POST /api/clover/hosted-checkout-webhook
@@ -104,8 +105,12 @@ interface CloverOrderForKds {
           name?: string;
           alternativeName?: string;
           modifier?: {
+            id?: string;
             name?: string;
-            modifierGroup?: { name?: string };
+            /** Clover caps expand depth at 3, so modifierGroup arrives
+             *  as a bare {id} reference. Group NAME is resolved via
+             *  `getModifierGroupNames()` (cached 1h per instance). */
+            modifierGroup?: { id?: string };
           };
         }[];
       };
@@ -286,7 +291,9 @@ export default async function handler(
   // on orderId) so re-deliveries of the same webhook are harmless.
   try {
     const order = await cloverRest<CloverOrderForKds>(
-      `/orders/${orderId}?expand=lineItems.modifications.modifier.modifierGroup`,
+      // Clover caps expand depth at 3 — group name comes via the
+      // cached id-lookup below, not a 4th expand level.
+      `/orders/${orderId}?expand=lineItems.modifications.modifier`,
     );
 
     // Title is "Online: <customerName>" — strip the prefix for the
@@ -295,6 +302,7 @@ export default async function handler(
       ? order.title.slice("Online: ".length).trim()
       : order.title?.trim();
 
+    const groupNames = await getModifierGroupNames();
     const items =
       (order.lineItems?.elements ?? []).map((li) => {
         // Clover stores quantity in per-mille units (1000 = 1 unit).
@@ -310,7 +318,8 @@ export default async function handler(
               mod.modifier?.name ??
               ""
             ).trim();
-            const group = (mod.modifier?.modifierGroup?.name ?? "").trim();
+            const groupId = mod.modifier?.modifierGroup?.id;
+            const group = groupId ? groupNames.get(groupId) : undefined;
             return name ? { n: name, g: group || undefined } : null;
           })
           .filter(Boolean) as { n: string; g?: string }[];
