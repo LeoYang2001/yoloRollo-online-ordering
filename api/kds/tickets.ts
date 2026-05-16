@@ -4,6 +4,7 @@ import {
   syncCloverToFirestore,
   type SyncResult,
 } from "../_kds-sync.js";
+import { storeMidnightMs } from "../_store-time.js";
 import { tokenFromRequest, verifyToken } from "./_session.js";
 
 /**
@@ -26,13 +27,22 @@ interface ResponseTicket {
   orderId: string;
   ticketNumber: string;
   customerName?: string;
-  items: { n: string; q: number; m?: string }[];
-  /** Includes "completed" so the KDS can render its "Ready for Pickup"
-   *  panel from the same response. The UI splits the array by status. */
-  status: "queued" | "in_progress" | "completed";
+  items: {
+    n: string;
+    q: number;
+    m?: string;
+    /** Structured modifier list. Each entry: name + group ("Mix-in",
+     *  "Topping", "Base", etc.) for KDS color-coding. */
+    mods?: { n: string; g?: string }[];
+  }[];
+  /** Active tickets are "queued" | "in_progress" | "completed".
+   *  "picked_up" is only returned when ?include=picked_up is set. */
+  status: "queued" | "in_progress" | "completed" | "picked_up";
   createdAtMs: number;
   /** When the ticket was marked completed (if applicable). */
   completedAtMs?: number;
+  /** When the customer received the order (if applicable). */
+  pickedUpAtMs?: number;
   elapsedSec: number;
   total?: number;
 }
@@ -72,19 +82,28 @@ export default async function handler(
       );
     }
 
+    // Include picked-up tickets only when explicitly requested via
+    // `?include=picked_up` — keeps the default response small for
+    // the always-on KDS poll. The Picked Up history tab opts in.
+    const includePickedUp =
+      String(req.query.include ?? "") === "picked_up";
+    const statuses = includePickedUp
+      ? ["queued", "in_progress", "completed", "picked_up"]
+      : ["queued", "in_progress", "completed"];
+
     // No `orderBy("createdAt")` here — combining it with a `where in`
     // requires a Firestore composite index that we'd have to provision
-    // separately. We instead sort the small result set (≤50 rows) in
-    // JS below, which is plenty fast for a kitchen board.
-    //
-    // Includes "completed" so the KDS UI can populate both its Queue
-    // and Ready-for-Pickup panels from the same response. Picked-up
-    // tickets are excluded (archived).
+    // separately. We instead sort the small result set in JS below.
     const snap = await firestore()
       .collection("tickets")
-      .where("status", "in", ["queued", "in_progress", "completed"])
-      .limit(50)
+      .where("status", "in", statuses)
+      .limit(200)
       .get();
+
+    // Drop anything older than today so the board self-resets at
+    // midnight without a manual clear. Firestore docs from prior
+    // days stay on disk but don't render.
+    const dayStart = storeMidnightMs();
 
     const now = Date.now();
     const tsToMs = (v: unknown): number | undefined => {
@@ -102,15 +121,17 @@ export default async function handler(
         const data = d.data() as KdsTicketDoc;
         const createdAtMs = tsToMs(data.createdAt) ?? 0;
         const completedAtMs = tsToMs(data.completedAt);
-        // Map Firestore status → response status. `picked_up` is
-        // filtered out by the where-clause above, so we don't expect
-        // it here, but default to "queued" for safety.
+        const pickedUpAtMs = tsToMs(
+          (data as { pickedUpAt?: unknown }).pickedUpAt,
+        );
         const status: ResponseTicket["status"] =
           data.status === "completed"
             ? "completed"
             : data.status === "in_progress"
               ? "in_progress"
-              : "queued";
+              : data.status === "picked_up"
+                ? "picked_up"
+                : "queued";
         return {
           orderId: data.orderId,
           ticketNumber: data.ticketNumber,
@@ -119,12 +140,16 @@ export default async function handler(
           status,
           createdAtMs,
           completedAtMs,
+          pickedUpAtMs,
           elapsedSec: createdAtMs
             ? Math.floor((now - createdAtMs) / 1000)
             : 0,
           total: data.total,
         };
       })
+      // Today-only — drop yesterday's leftovers so the board resets
+      // automatically at midnight (store-local).
+      .filter((t) => t.createdAtMs >= dayStart)
       // Oldest first — matches the FIFO prep order the KDS card grid
       // expects (leftmost = next to make).
       .sort((a, b) => a.createdAtMs - b.createdAtMs);

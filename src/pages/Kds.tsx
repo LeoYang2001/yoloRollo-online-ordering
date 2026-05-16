@@ -18,15 +18,26 @@ interface Ticket {
   orderId: string;
   ticketNumber: string;
   customerName?: string;
-  items: { n: string; q: number; m?: string }[];
-  status: "queued" | "in_progress" | "completed";
+  items: {
+    n: string;
+    q: number;
+    m?: string;
+    /** Structured modifier list — each entry has the modifier name +
+     *  optional group ("Base", "Mix-in", "Topping", "Boba", etc.) so
+     *  the KDS can color-code them. */
+    mods?: { n: string; g?: string }[];
+  }[];
+  status: "queued" | "in_progress" | "completed" | "picked_up";
   createdAtMs: number;
   completedAtMs?: number;
+  pickedUpAtMs?: number;
   elapsedSec: number;
   total?: number;
 }
 
 type Action = "complete" | "dismiss" | "recall";
+
+type View = "active" | "history";
 
 const TOKEN_KEY = "yolo-rollo-kds-token";
 const POLL_MS = 2_000;
@@ -147,10 +158,16 @@ function Board({
   // orderId — same set for all action types since only one button on
   // a card is pressable at a time.
   const [pending, setPending] = useState<Set<string>>(new Set());
+  // Active = the live Queue + Ready panels. History = today's
+  // picked-up orders (audit log). Always polling so flipping between
+  // tabs feels instant.
+  const [view, setView] = useState<View>("active");
 
   const fetchTickets = useCallback(async () => {
     try {
-      const r = await fetch("/api/kds/tickets", {
+      // Always include picked-up so the History tab has data the moment
+      // the user switches to it — no separate fetch needed on tab flip.
+      const r = await fetch("/api/kds/tickets?include=picked_up", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (r.status === 401) {
@@ -238,10 +255,10 @@ function Board({
     }
   };
 
-  // Compute "live" elapsed seconds + split into Queue vs Ready panels.
-  // Done in one memo so the per-second ticker only triggers one
-  // recompute, not separate ones per derived array.
-  const { queue, ready } = useMemo(() => {
+  // Compute "live" elapsed seconds + split into Queue, Ready, History
+  // panels. Done in one memo so the per-second ticker only triggers
+  // one recompute, not separate ones per derived array.
+  const { queue, ready, pickedUp } = useMemo(() => {
     void tick; // dependency on the ticker
     const now = Date.now();
     const enriched = (tickets ?? []).map((t) => ({
@@ -259,19 +276,53 @@ function Board({
     const ready = enriched
       .filter((t) => t.status === "completed")
       .sort((a, b) => (b.completedAtMs ?? 0) - (a.completedAtMs ?? 0));
-    return { queue, ready };
+    // History — picked up today, newest pickup at top
+    const pickedUp = enriched
+      .filter((t) => t.status === "picked_up")
+      .sort((a, b) => (b.pickedUpAtMs ?? 0) - (a.pickedUpAtMs ?? 0));
+    return { queue, ready, pickedUp };
   }, [tickets, tick]);
 
   return (
     <div className="min-h-screen bg-black p-4 text-white">
       <header className="mb-4 flex items-center justify-between px-2">
-        <div className="font-display text-3xl font-extrabold">
-          Kitchen Queue
+        <div className="flex items-center gap-5">
+          <div className="font-display text-3xl font-extrabold">
+            Kitchen Queue
+          </div>
+          {/* View tabs — Active (live board) vs History (picked-up
+              audit log, today only). The badge after History shows
+              today's pickup count so staff knows whether it's worth
+              checking. */}
+          <div className="flex gap-1 rounded-xl bg-zinc-900 p-1">
+            <TabButton
+              active={view === "active"}
+              onClick={() => setView("active")}
+            >
+              Active
+              <span className="ml-2 text-xs text-zinc-500">
+                {queue.length + ready.length}
+              </span>
+            </TabButton>
+            <TabButton
+              active={view === "history"}
+              onClick={() => setView("history")}
+            >
+              History
+              <span className="ml-2 text-xs text-zinc-500">
+                {pickedUp.length}
+              </span>
+            </TabButton>
+          </div>
         </div>
         <div className="flex items-center gap-3 text-sm text-zinc-400">
-          <span>
-            {queue.length} active · {ready.length} ready
-          </span>
+          {view === "active" ? (
+            <span>
+              {queue.length} active · {ready.length} ready
+            </span>
+          ) : (
+            <span>{pickedUp.length} picked up today</span>
+          )}
           <button
             type="button"
             onClick={onAuthExpired}
@@ -290,7 +341,7 @@ function Board({
 
       {tickets === null && !error ? (
         <div className="px-2 py-8 text-zinc-500">Loading…</div>
-      ) : (
+      ) : view === "active" ? (
         <>
           {/* ── In Queue ─────────────────────────────────────── */}
           <SectionHeader
@@ -330,8 +381,53 @@ function Board({
             </div>
           )}
         </>
+      ) : (
+        <>
+          {/* ── History (today's picked-up orders) ──────────── */}
+          <SectionHeader
+            label="Picked up · today"
+            count={pickedUp.length}
+            empty="No orders picked up yet today."
+          />
+          {pickedUp.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {pickedUp.map((t) => (
+                <TicketCard
+                  key={t.orderId}
+                  ticket={t}
+                  pending={pending.has(t.orderId)}
+                  onAction={(a) => transition(t.orderId, a)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-lg px-4 py-1.5 font-display text-sm font-bold transition ${
+        active
+          ? "bg-zinc-700 text-white"
+          : "text-zinc-400 hover:text-zinc-200"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -360,6 +456,27 @@ function SectionHeader({
   );
 }
 
+// ─── Modifier color coding ──────────────────────────────────────────
+// Color the modifier line based on its group name so kitchen staff
+// don't confuse a mix-in for a topping while plating. Distinct hues
+// + high contrast against the dark KDS card. Falls back to neutral
+// gray for unknown groups so a missing/unexpected group name doesn't
+// turn into invisible text.
+function modifierStyle(group: string | undefined): {
+  bg: string;
+  text: string;
+  label: string;
+} {
+  const g = (group ?? "").toLowerCase();
+  if (g.includes("mix")) return { bg: "bg-pink-500/15", text: "text-pink-300", label: "Mix-in" };
+  if (g.includes("top")) return { bg: "bg-amber-500/15", text: "text-amber-300", label: "Topping" };
+  if (g.includes("base")) return { bg: "bg-sky-500/15", text: "text-sky-300", label: "Base" };
+  if (g.includes("boba")) return { bg: "bg-violet-500/15", text: "text-violet-300", label: "Boba" };
+  if (g.includes("size")) return { bg: "bg-zinc-700/40", text: "text-zinc-300", label: "Size" };
+  if (g.includes("sweet")) return { bg: "bg-rose-500/15", text: "text-rose-300", label: "Sweet" };
+  return { bg: "bg-zinc-700/40", text: "text-zinc-300", label: group || "Add-on" };
+}
+
 // ─── Single ticket card ─────────────────────────────────────────────
 function TicketCard({
   ticket,
@@ -371,20 +488,28 @@ function TicketCard({
   onAction: (action: Action) => void;
 }) {
   const isReady = ticket.status === "completed";
+  const isPickedUp = ticket.status === "picked_up";
 
-  // Color band changes from green → yellow → red as the order ages,
-  // so a busy kitchen can prioritize visually. Ready-state cards use
-  // a flat pink band so they're visually distinct from the queue.
-  const ageBand = isReady
-    ? "bg-rollo-pink"
-    : ticket.liveElapsedSec < 90
-      ? "bg-emerald-500"
-      : ticket.liveElapsedSec < 180
-        ? "bg-amber-500"
-        : "bg-rose-500";
+  // Color band: green→amber→rose as queued tickets age. Pink for ready.
+  // Zinc for picked-up so history cards visually recede.
+  const ageBand = isPickedUp
+    ? "bg-zinc-700"
+    : isReady
+      ? "bg-rollo-pink"
+      : ticket.liveElapsedSec < 90
+        ? "bg-emerald-500"
+        : ticket.liveElapsedSec < 180
+          ? "bg-amber-500"
+          : "bg-rose-500";
+
+  const elapsedLabel = isPickedUp ? "picked up" : isReady ? "ready" : "elapsed";
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-zinc-900 shadow-lg">
+    <div
+      className={`overflow-hidden rounded-2xl bg-zinc-900 shadow-lg ${
+        isPickedUp ? "opacity-80" : ""
+      }`}
+    >
       <div className={`${ageBand} h-1.5 w-full`} aria-hidden />
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -403,36 +528,66 @@ function TicketCard({
               {formatElapsed(ticket.liveElapsedSec)}
             </div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-              {isReady ? "ready" : "elapsed"}
+              {elapsedLabel}
             </div>
           </div>
         </div>
 
         <div className="mt-3 divide-y divide-zinc-800">
           {ticket.items.map((it, i) => (
-            <div key={i} className="flex items-start gap-2 py-2">
-              <span className="min-w-[26px] rounded-md bg-zinc-800 px-1.5 py-0.5 text-center text-xs font-bold text-zinc-300">
+            <div key={i} className="flex items-start gap-2 py-2.5">
+              <span className="min-w-[30px] rounded-md bg-zinc-800 px-2 py-1 text-center text-sm font-bold text-zinc-200">
                 ×{it.q}
               </span>
               <div className="flex-1">
-                <div className="font-display font-bold leading-tight">
+                <div className="font-display text-base font-bold leading-tight">
                   {it.n}
                 </div>
-                {it.m && (
-                  <div className="mt-0.5 text-xs text-zinc-400">{it.m}</div>
+                {/* Structured modifiers with color-coded chips so
+                    staff can tell mix-ins from toppings at a glance.
+                    Falls back to the legacy flat string if a ticket
+                    was synced before mods[] was captured. */}
+                {it.mods && it.mods.length > 0 ? (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {it.mods.map((mod, mi) => {
+                      const s = modifierStyle(mod.g);
+                      return (
+                        <span
+                          key={mi}
+                          className={`inline-flex items-baseline gap-1.5 rounded-md px-2 py-0.5 text-sm font-semibold ${s.bg} ${s.text}`}
+                        >
+                          <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">
+                            {s.label}
+                          </span>
+                          <span>{mod.n}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  it.m && (
+                    <div className="mt-1 text-sm text-zinc-400">{it.m}</div>
+                  )
                 )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Action buttons depend on the ticket's lifecycle stage.
-            Queued/in-progress → single Complete button.
-            Completed (Ready for Pickup) → Dismiss (customer received)
-            + Recall (move back to the kitchen queue if completed too
-            early). Both lifecycle stages share the same `pending` lock
-            so double-taps can't fire two transitions in flight. */}
-        {isReady ? (
+        {/* Buttons differ by status:
+              queued/in_progress  → Complete (big emerald)
+              completed (ready)   → Recall + Picked up
+              picked_up (history) → Recall only (un-archive) */}
+        {isPickedUp ? (
+          <button
+            type="button"
+            onClick={() => onAction("recall")}
+            disabled={pending}
+            className="mt-4 w-full rounded-xl bg-zinc-800 py-3 font-display text-sm font-extrabold uppercase tracking-wider text-zinc-200 transition active:scale-[0.98] disabled:opacity-50"
+          >
+            ↺ {pending ? "Working…" : "Recall"}
+          </button>
+        ) : isReady ? (
           <div className="mt-4 flex gap-2">
             <button
               type="button"

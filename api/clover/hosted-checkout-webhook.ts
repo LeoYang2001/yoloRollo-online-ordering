@@ -99,7 +99,16 @@ interface CloverOrderForKds {
       name?: string;
       unitQty?: number;
       note?: string;
-      modifications?: { elements?: { name?: string }[] };
+      modifications?: {
+        elements?: {
+          name?: string;
+          alternativeName?: string;
+          modifier?: {
+            name?: string;
+            modifierGroup?: { name?: string };
+          };
+        }[];
+      };
     }[];
   };
 }
@@ -277,7 +286,7 @@ export default async function handler(
   // on orderId) so re-deliveries of the same webhook are harmless.
   try {
     const order = await cloverRest<CloverOrderForKds>(
-      `/orders/${orderId}?expand=lineItems.modifications`,
+      `/orders/${orderId}?expand=lineItems.modifications.modifier.modifierGroup`,
     );
 
     // Title is "Online: <customerName>" — strip the prefix for the
@@ -292,20 +301,28 @@ export default async function handler(
         const q = li.unitQty
           ? Math.max(1, Math.round(li.unitQty / 1000))
           : 1;
-        // Modifier names from the customer's customizer selections.
-        // Falls back to li.note (which our Hosted Checkout flow uses
-        // to encode modifiers when creating the cart on Clover).
-        const modNames = (li.modifications?.elements ?? [])
-          .map((m) => m.name?.trim())
-          .filter(Boolean) as string[];
+        // Structured modifier list with group names for KDS color-coding.
+        const mods = (li.modifications?.elements ?? [])
+          .map((mod) => {
+            const name = (
+              mod.name ??
+              mod.alternativeName ??
+              mod.modifier?.name ??
+              ""
+            ).trim();
+            const group = (mod.modifier?.modifierGroup?.name ?? "").trim();
+            return name ? { n: name, g: group || undefined } : null;
+          })
+          .filter(Boolean) as { n: string; g?: string }[];
         const m =
-          modNames.length > 0
-            ? modNames.join(", ")
+          mods.length > 0
+            ? mods.map((mm) => mm.n).join(", ")
             : li.note?.trim() || undefined;
         return {
           n: li.name ?? "Item",
           q,
           ...(m ? { m } : {}),
+          ...(mods.length > 0 ? { mods } : {}),
         };
       }) ?? [];
 

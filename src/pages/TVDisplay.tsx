@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { brand } from "../config/brand";
@@ -39,6 +39,33 @@ interface TvPayload {
 
 const POLL_MS = 3_000;
 
+/**
+ * Speak a ticket-ready announcement via the Web Speech API. Cancels
+ * any in-flight utterance so a burst of completes doesn't pile up
+ * into a backlog. Spells the ticket number letter-by-letter (single
+ * space between chars) so the TTS pronounces "CT6EQC" as
+ * "C T 6 E Q C" rather than trying to read it as a word.
+ */
+function announceReady(ticketNumber: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const spelled = ticketNumber.split("").join(" ");
+  const u = new SpeechSynthesisUtterance(
+    `Order ${spelled} is ready for pickup`,
+  );
+  u.rate = 0.92;
+  u.pitch = 1.05;
+  u.volume = 1.0;
+  // Prefer a local English voice if one's available — sounds more
+  // natural than the default robot.
+  const voices = window.speechSynthesis.getVoices();
+  const en = voices.find(
+    (v) => v.lang.toLowerCase().startsWith("en") && v.localService,
+  );
+  if (en) u.voice = en;
+  window.speechSynthesis.speak(u);
+}
+
 export function TVDisplay() {
   const navigate = useNavigate();
   const url = `${brand.publicUrl}/?src=tv`;
@@ -47,6 +74,15 @@ export function TVDisplay() {
     ready: [],
     asOf: new Date().toISOString(),
   });
+  // True once the staff has tapped to enable audio. Browsers block
+  // speechSynthesis until user gesture happens on the page, so we
+  // show an "Enable announcements" overlay on first load.
+  const [announceEnabled, setAnnounceEnabled] = useState(false);
+  // Track which ticket numbers we've already spoken so we don't
+  // re-announce on every poll. Populated on first data arrival with
+  // whatever's currently ready (so we don't shout out a backlog).
+  const announcedRef = useRef<Set<string>>(new Set());
+  const seededRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +101,38 @@ export function TVDisplay() {
     return () => {
       cancelled = true;
       window.clearInterval(id);
+    };
+  }, []);
+
+  // Watch the ready list — speak any newly arrived ticket.
+  useEffect(() => {
+    if (!seededRef.current) {
+      // First payload: seed the "already announced" set with whatever's
+      // already on the board so we don't shout out historical tickets
+      // the staff already knows about.
+      for (const t of data.ready) announcedRef.current.add(t.ticketNumber);
+      seededRef.current = true;
+      return;
+    }
+    if (!announceEnabled) return;
+    for (const t of data.ready) {
+      if (!announcedRef.current.has(t.ticketNumber)) {
+        announcedRef.current.add(t.ticketNumber);
+        announceReady(t.ticketNumber);
+      }
+    }
+  }, [data.ready, announceEnabled]);
+
+  // Some browsers don't populate getVoices() synchronously; pre-warm
+  // so the en-US voice is ready by the time the first announcement
+  // fires.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.getVoices();
+    const onVoices = () => window.speechSynthesis.getVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", onVoices);
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
     };
   }, []);
 
@@ -249,9 +317,43 @@ export function TVDisplay() {
           </div>
         </div>
 
-        {/* Bottom: exit affordance for staff (right corner so customers
-            don't accidentally hit it) */}
-        <div className="mt-4 flex justify-end">
+        {/* Bottom: exit affordance + audio toggle (right corner so
+            customers don't accidentally hit either). Audio toggle is
+            staff-only — first tap unlocks the browser's autoplay
+            block and starts announcing every new ready ticket. */}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (announceEnabled) {
+                window.speechSynthesis?.cancel();
+                setAnnounceEnabled(false);
+                return;
+              }
+              // User-gesture unlock: speak an empty utterance to
+              // permission the audio context, then enable.
+              try {
+                const u = new SpeechSynthesisUtterance(" ");
+                u.volume = 0;
+                window.speechSynthesis.speak(u);
+              } catch {
+                /* ignore — best effort */
+              }
+              setAnnounceEnabled(true);
+            }}
+            aria-label={
+              announceEnabled
+                ? "Disable ticket announcements"
+                : "Enable ticket announcements"
+            }
+            className={`rounded-full px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition ${
+              announceEnabled
+                ? "bg-rollo-butter text-rollo-ink shadow-md"
+                : "bg-white/20 text-white/90 hover:bg-white/30"
+            }`}
+          >
+            {announceEnabled ? "🔊 Announcing on" : "🔇 Tap to announce"}
+          </button>
           <Button variant="dark" size="sm" onClick={() => navigate("/")}>
             ← Exit
           </Button>

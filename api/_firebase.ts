@@ -65,8 +65,20 @@ export interface KdsTicketDoc {
   ticketNumber: string;
   /** Customer's display name from Hosted Checkout. */
   customerName?: string;
-  /** Line items, each `{n, q, m}` where n=name, q=qty, m=modifiers. */
-  items: { n: string; q: number; m?: string }[];
+  /** Line items, each `{n, q, m?, mods?}` where:
+   *    n    = item name
+   *    q    = quantity
+   *    m    = legacy flat-string modifier summary (kept for older clients)
+   *    mods = structured modifier list, each `{n: name, g?: group}`.
+   *           Group is e.g. "Mix-in" / "Topping" / "Base" / "Boba" —
+   *           used by the KDS to color-code lines so staff don't
+   *           confuse a mix-in with a topping. */
+  items: {
+    n: string;
+    q: number;
+    m?: string;
+    mods?: { n: string; g?: string }[];
+  }[];
   /** Ticket lifecycle:
    *    queued       → just paid, sitting in the kitchen line
    *    in_progress  → staff started preparing (reserved; not exposed yet)

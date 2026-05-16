@@ -25,21 +25,28 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { cloverRest } from "./_clover.js";
 import { firestore, type KdsTicketDoc } from "./_firebase.js";
+import { storeMidnightMs } from "./_store-time.js";
 
 const SYNC_TTL_MS = 5_000;
 /**
- * How far back the sync scans for paid Clover orders that may need to
- * be brought into Firestore. Wider than the queue / status endpoints'
- * 15-min "kitchen load" window — those concern current prep capacity,
- * but the SYNC just needs to find orders that haven't been mirrored
- * yet. 60 min gives plenty of headroom to catch in-store sales that
- * existed before a deploy or after a brief outage.
- *
- * Safe to widen further (e.g. 4h, 8h) — the per-doc `exists` guard
- * inside `doSync()` prevents overwriting already-mirrored tickets.
- * The only cost is a slightly larger Clover payload per sync.
+ * Hard ceiling on how far back we'll ever scan, just to keep the
+ * Clover payload bounded if midnight rolls over mid-shift. The actual
+ * window is min(storeMidnightToday, now - this) — typically
+ * `storeMidnightMs()` dominates so each sync covers "all of today".
  */
-const LOOKBACK_MS = 60 * 60 * 1000;
+const MAX_LOOKBACK_MS = 18 * 60 * 60 * 1000; // 18 hours
+
+interface CloverModification {
+  name?: string;
+  /** The parent modifier group's name, e.g. "Base" / "Mix-in" /
+   *  "Topping" / "Boba". Used to color-code in the KDS UI so staff
+   *  don't mistake a mix-in for a topping. Clover surfaces this on
+   *  the modifier nested under modification when we expand
+   *  `lineItems.modifications.modifier`. */
+  modifier?: { name?: string; modifierGroup?: { id?: string; name?: string } };
+  /** Some accounts populate alternativeName directly. */
+  alternativeName?: string;
+}
 
 interface CloverLineItem {
   name?: string;
@@ -49,7 +56,7 @@ interface CloverLineItem {
    *  `expand=lineItems.modifications`. Each modification is one
    *  modifier the customer (or cashier) selected. */
   modifications?: {
-    elements?: { name?: string }[];
+    elements?: CloverModification[];
   };
 }
 
@@ -106,7 +113,11 @@ export async function syncCloverToFirestore(): Promise<SyncResult> {
 
 async function doSync(): Promise<SyncResult> {
   const now = Date.now();
-  const since = now - LOOKBACK_MS;
+  // Pull EVERYTHING since store-midnight today so the KDS naturally
+  // resets at the end of each business day. Bounded by MAX_LOOKBACK_MS
+  // so a misconfigured clock or DST edge case can't blow up the
+  // Clover payload.
+  const since = Math.max(storeMidnightMs(), now - MAX_LOOKBACK_MS);
   const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
 
   let data: { elements?: CloverOrder[] };
@@ -118,13 +129,18 @@ async function doSync(): Promise<SyncResult> {
     // pulls each modifier (mix-ins / toppings / boba / etc.) so the
     // KDS card can show what the customer ordered, not just the base
     // item name.
+    // Nested expand `lineItems.modifications.modifier.modifierGroup`
+    // is required to surface each modification's parent group name
+    // ("Mix-in" vs "Topping" etc.). The KDS uses that group name to
+    // color-code the modifier lines so staff don't confuse one with
+    // another while plating.
     data = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?expand=lineItems.modifications,payments&${filter}&limit=100`,
+      `/orders?expand=lineItems.modifications.modifier.modifierGroup,payments&${filter}&limit=200`,
     );
   } catch (err) {
     const result: SyncResult = {
       cached: false,
-      lookbackMs: LOOKBACK_MS,
+      lookbackMs: now - since,
       totalOrders: 0,
       paidOrders: 0,
       existingSkipped: 0,
@@ -187,7 +203,7 @@ async function doSync(): Promise<SyncResult> {
 
   const result: SyncResult = {
     cached: false,
-    lookbackMs: LOOKBACK_MS,
+    lookbackMs: now - since,
     totalOrders: allOrders.length,
     paidOrders: paid.length,
     existingSkipped,
@@ -216,24 +232,28 @@ function buildDoc(order: CloverOrder): KdsTicketDoc {
     const q = li.unitQty
       ? Math.max(1, Math.round(li.unitQty / 1000))
       : 1;
-    // Modifier names — Clover's `modifications.elements` carries the
-    // customer-selected mix-ins, toppings, boba type, size, etc. We
-    // join them with ", " so the KDS card can show
-    //   STRAWBERRY ROLLED ICE CREAM
-    //     ×1 · Oreo, M&M, Chocolate drizzle
-    // Falls back to the line-item `note` (which our Hosted Checkout
-    // flow uses to pass modifiers when the order is first created).
-    const modNames = (li.modifications?.elements ?? [])
-      .map((m) => m.name?.trim())
-      .filter(Boolean) as string[];
+    // Structured modifier list: each entry carries the modifier
+    // name (e.g. "Oreo") AND its modifier-group name (e.g. "Mix-in"),
+    // so the KDS can color-code mix-ins vs toppings vs base vs boba.
+    const mods = (li.modifications?.elements ?? [])
+      .map((mod) => {
+        const name = (mod.name ?? mod.alternativeName ?? mod.modifier?.name ?? "")
+          .trim();
+        const group = (mod.modifier?.modifierGroup?.name ?? "").trim();
+        return name ? { n: name, g: group || undefined } : null;
+      })
+      .filter(Boolean) as { n: string; g?: string }[];
+    // Legacy `m` string — kept so older KDS clients render something
+    // sensible until they pick up the new `mods` array.
     const m =
-      modNames.length > 0
-        ? modNames.join(", ")
+      mods.length > 0
+        ? mods.map((mm) => mm.n).join(", ")
         : li.note?.trim() || undefined;
     return {
       n: li.name ?? "Item",
       q,
       ...(m ? { m } : {}),
+      ...(mods.length > 0 ? { mods } : {}),
     };
   });
 

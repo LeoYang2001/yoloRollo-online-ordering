@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { firestore, type KdsTicketDoc } from "../_firebase.js";
 import { syncCloverToFirestore } from "../_kds-sync.js";
+import { storeMidnightMs } from "../_store-time.js";
 
 /**
  * GET /api/tv/display
@@ -82,6 +83,8 @@ export default async function handler(
 
   const now = Date.now();
   const readyCutoff = now - READY_WINDOW_MS;
+  // Filter out yesterday's leftovers so the TV resets at midnight.
+  const dayStart = storeMidnightMs();
 
   // Sync newly-paid Clover orders into Firestore before reading. The
   // helper has its own 5s TTL so this is cheap when called every 3s.
@@ -112,6 +115,8 @@ export default async function handler(
         data,
         createdMs: tsToMs(data.createdAt),
       }))
+      // Today only — yesterday's stale tickets shouldn't loiter.
+      .filter(({ createdMs }) => createdMs >= dayStart)
       .sort((a, b) => a.createdMs - b.createdMs)
       .slice(0, PREPARING_CAP)
       .map(({ data, createdMs }) => ({
@@ -134,8 +139,14 @@ export default async function handler(
       .map((data) => ({
         data,
         completedMs: tsToMs(data.completedAt),
+        createdMs: tsToMs(data.createdAt),
       }))
-      .filter(({ completedMs }) => completedMs > readyCutoff)
+      // Today only — the 30-min READY_WINDOW_MS still applies on top
+      // as a safety cap if staff forgets to dismiss.
+      .filter(
+        ({ completedMs, createdMs }) =>
+          completedMs > readyCutoff && createdMs >= dayStart,
+      )
       .sort((a, b) => b.completedMs - a.completedMs)
       .slice(0, READY_CAP)
       .map(({ data, completedMs }) => ({
