@@ -27,7 +27,15 @@ import { cloverRest } from "./_clover.js";
 import { firestore, type KdsTicketDoc } from "./_firebase.js";
 import { storeMidnightMs } from "./_store-time.js";
 
-const SYNC_TTL_MS = 5_000;
+/**
+ * Sync cache window. Was 5s, but every miss did a Firestore .get()
+ * + sometimes a .set() per paid order, which blew through the daily
+ * Spark-plan quota. 15s gives the KDS still-feels-live updates while
+ * cutting sync invocations by 3×. The KDS UI itself polls every 2s
+ * but only ONE call out of every ~7-8 actually triggers a Clover hit;
+ * the rest hit the cache and read Firestore.
+ */
+const SYNC_TTL_MS = 15_000;
 /**
  * Hard ceiling on how far back we'll ever scan, just to keep the
  * Clover payload bounded if midnight rolls over mid-shift. The actual
@@ -213,37 +221,24 @@ async function doSync(): Promise<SyncResult> {
   let existingSkipped = 0;
   const addedIds: string[] = [];
 
-  // Run the existence checks + writes in parallel — Firestore handles
-  // burst writes fine, and serializing here would scale poorly when a
-  // busy day brings dozens of fresh orders into the lookback window.
+  // Run the existence checks + writes in parallel. We previously also
+  // ran an unconditional `update()` on every existing doc to backfill
+  // items / modifiers — that turned out to be the dominant Firestore
+  // op-cost driver (1 read + 1 write per existing doc per sync × 12
+  // syncs/min × 60 min × 12 hours = quota burn). Now we only TOUCH
+  // new docs. Existing docs are left as-is, which means in-flight
+  // item/modifier changes from Clover (rare — voided lines, renamed
+  // orders) won't reflect until the doc gets recreated. Acceptable
+  // tradeoff vs. running out of Firestore quota at 2pm.
   await Promise.all(
     paid.map(async (order) => {
       const docRef = db.collection("tickets").doc(order.id);
       const existing = await docRef.get();
-      const doc = buildDoc(order, groupNames);
       if (existing.exists) {
-        // Don't overwrite status/completedAt/createdAt — staff may
-        // have marked it in_progress or completed. But DO refresh
-        // items + customerName + total in case the cashier voided a
-        // line, added a modifier, or renamed the order in Clover. This
-        // also backfills modifications onto tickets that were synced
-        // before we knew to expand `lineItems.modifications`.
         existingSkipped++;
-        try {
-          await docRef.update({
-            items: doc.items,
-            customerName: doc.customerName ?? null,
-            total: doc.total ?? null,
-            ticketNumber: doc.ticketNumber,
-          });
-        } catch (updateErr) {
-          console.warn(
-            `[kds-sync] backfill update failed for ${order.id}:`,
-            (updateErr as Error).message,
-          );
-        }
         return;
       }
+      const doc = buildDoc(order, groupNames);
       try {
         await docRef.set(doc, { merge: true });
         addedIds.push(order.id);
