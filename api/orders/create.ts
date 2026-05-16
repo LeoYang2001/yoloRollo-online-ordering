@@ -214,19 +214,31 @@ export default async function handler(
     });
   }
 
-  // Decision C: generate an 8-char correlation id and embed it in two
-  // places on the Clover order so /api/checkout-session/[id]?cid=... can
+  // Decision C: generate an 8-char correlation id and embed it on the
+  // Hosted Checkout request so /api/checkout-session/[id]?cid=... can
   // find the resulting paid order in the recent-orders list.
-  //   - customer.firstName = cid           (almost certainly survives;
-  //                                         visible briefly to kitchen
-  //                                         but overridden by the
-  //                                         "Online: <name>" title
-  //                                         rename Confirmation.tsx does)
-  //   - merchantMetadata.correlationId     (cleaner channel; may or may
-  //                                         not flow through — we use it
-  //                                         opportunistically and fall
-  //                                         back to customer.firstName)
+  //
+  // We tried `customer.firstName = cid` first — turns out Clover
+  // pre-fills the customer-facing form with whatever we send there,
+  // so the customer saw "807A20CD" in the First Name field. Bad UX.
+  // Channels we use now (in order of cleanness):
+  //   - merchantMetadata.correlationId     (cleanest — invisible
+  //                                         everywhere; works only if
+  //                                         Clover exposes it on the
+  //                                         resulting order)
+  //   - First line item's note appended    (definitely survives onto
+  //     with ` · ref:<cid>`                 the order; visible to KDS
+  //                                         as a small suffix, low-noise)
   const cid = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+
+  // Split the pickup name into first/last so Clover's Customer
+  // Information section pre-fills with something readable instead of
+  // an empty form or our cid. This is just the customer's pickup-
+  // ticket label, not the cardholder — Clover collects card details
+  // separately below it.
+  const nameParts = body.customerName.trim().split(/\s+/);
+  const customerFirstName = nameParts[0] || "Customer";
+  const customerLastName = nameParts.slice(1).join(" ") || undefined;
 
   try {
     const checkout = await cloverHostedCheckout<{
@@ -234,32 +246,34 @@ export default async function handler(
       checkoutSessionId: string;
     }>(
       {
-        // We DO populate firstName/lastName now (Decision C) because we
-        // need firstName as our correlation-id carrier. lastName holds
-        // the customer's real name so it's not lost; Clover may pre-fill
-        // it on the receipt. The "Online: <name>" title rename in
-        // Confirmation.tsx writes the order title separately, so what
-        // the kitchen ticket shows is unaffected once that fires.
         customer: {
-          firstName: cid,
-          lastName: body.customerName,
+          firstName: customerFirstName,
+          lastName: customerLastName,
           email: body.customerEmail || undefined,
         },
         shoppingCart: {
-          lineItems: body.lines.map((l) => ({
-            name: l.itemName,
-            unitQty: l.quantity,
-            price: dollarsToCents(l.unitPrice),
-            note:
-              [l.modifiers.map((m) => m.name).join(", "), l.notes]
-                .filter(Boolean)
-                .join(" — ") || undefined,
-          })),
+          // Append the cid to the FIRST line item's note as `· ref:XXX`
+          // so the lookup endpoint can find it by scanning recent
+          // orders' line items. Kitchen briefly sees the ref tail but
+          // ignores it.
+          lineItems: body.lines.map((l, i) => {
+            const noteParts = [
+              l.modifiers.map((m) => m.name).join(", "),
+              l.notes,
+            ].filter(Boolean);
+            if (i === 0) noteParts.push(`ref:${cid}`);
+            return {
+              name: l.itemName,
+              unitQty: l.quantity,
+              price: dollarsToCents(l.unitPrice),
+              note: noteParts.join(" · ") || undefined,
+            };
+          }),
         },
-        // Stored on the Clover order's metadata. Whether `correlationId`
-        // actually flows through to the resulting order's queryable
-        // fields is unknown — Clover doesn't document this. The lookup
-        // endpoint tries both metadata-match and customer.firstName-match.
+        // Sent as a second cid channel. We don't know whether Clover
+        // persists this onto the resulting order's queryable fields —
+        // if it does, the lookup endpoint can match on it without
+        // touching line items at all. Free insurance.
         merchantMetadata: {
           fulfillment: "pickup",
           source: "yolo-rollo-web",

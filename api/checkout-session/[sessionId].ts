@@ -38,18 +38,19 @@ import { cloverConfig, cloverRest } from "../_clover.js";
  *   { orderId: null, via: "none" }
  */
 
-interface CloverCustomer {
+interface CloverLineItem {
   id?: string;
-  firstName?: string;
-  lastName?: string;
+  name?: string;
+  note?: string;
 }
 
 interface CloverOrder {
   id: string;
   paymentState?: string;
   createdTime?: number;
-  /** Populated when we query with ?expand=customers. */
-  customers?: { elements?: CloverCustomer[] };
+  /** Populated when we query with ?expand=lineItems. The cid is
+   *  appended to the first line item's note as `· ref:XXXXXXXX`. */
+  lineItems?: { elements?: CloverLineItem[] };
 }
 
 export default async function handler(
@@ -138,25 +139,26 @@ export default async function handler(
   }
 
   // ─── Path 2: scan recent paid orders, prefer cid match ────────
-  // List orders created in the last 5 minutes with customers expanded.
-  // If a cid was passed, find the order whose customer.firstName === cid
-  // (precise match — each /api/orders/create generates a unique cid).
-  // Otherwise (or if cid match misses) fall back to the most-recent paid
-  // order, which is correct under no concurrency.
+  // List orders created in the last 5 minutes with line items expanded.
+  // If a cid was passed, find the order whose first line item's note
+  // contains `ref:<cid>` (precise — each /api/orders/create generates
+  // a unique cid). Otherwise (or if cid match misses) fall back to the
+  // most-recent paid order, which is correct under no concurrency.
   try {
     const since = Date.now() - 5 * 60 * 1000;
     const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
     const list = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?${filter}&expand=customers&limit=20`,
+      `/orders?${filter}&expand=lineItems&limit=20`,
     );
     const paid = (list.elements ?? []).filter(
       (o) => o.paymentState === "PAID",
     );
 
     if (cid) {
+      const marker = `ref:${cid.toUpperCase()}`;
       const exact = paid.find((o) =>
-        o.customers?.elements?.some(
-          (c) => (c.firstName ?? "").toUpperCase() === cid.toUpperCase(),
+        o.lineItems?.elements?.some((li) =>
+          (li.note ?? "").toUpperCase().includes(marker),
         ),
       );
       if (exact) {
