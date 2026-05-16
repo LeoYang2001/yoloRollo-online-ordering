@@ -67,9 +67,9 @@ export interface CartLine {
 }
 
 export interface OrderRequest {
-  customerName: string;
-  customerPhone: string;  // SMS pickup-ready alerts
-  customerEmail?: string; // Helps Apple/Google Pay skip the contact-info prompt
+  customerName: string;      // pickup-ticket label, NOT the cardholder
+  customerPhone?: string;    // optional — we don't have SMS pickup alerts
+  customerEmail?: string;    // optional — Clover sends the receipt here if set
   notes?: string;
   lines: CartLine[];
   /**
@@ -97,4 +97,16 @@ export interface OrderStatus {
   ticketNumber: string;
   state: "pending_payment" | "paid" | "preparing" | "ready" | "completed" | "cancelled";
   updatedAt: string;
+}
+
+/** Real-time pickup wait time from the kitchen queue. */
+export interface QueueEstimate {
+  /** Estimated minutes until the customer's order is ready. */
+  minutes: number;
+  /** How many tickets are currently in front (not including cold-drink-only tickets). */
+  queueDepth: number;
+  /** ISO timestamp the estimate was computed at. */
+  asOf: string;
+  /** Where the number came from. "fallback" means Clover was unreachable. */
+  source: "clover" | "fallback";
 }

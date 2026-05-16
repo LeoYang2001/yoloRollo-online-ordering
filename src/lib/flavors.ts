@@ -35,6 +35,17 @@ export function flavorGradient(flavor: FlavorKey | undefined): string {
 }
 
 /**
+ * Soft pastel background used to tint a ProductCard so the card
+ * silently telegraphs its base flavor. Uses the lighter c1 highlight
+ * at ~50% opacity, fading toward near-white at the bottom so price /
+ * caption text stays readable on the same surface.
+ */
+export function flavorCardBg(flavor: FlavorKey | undefined): string {
+  const f = (flavor && FLAVOR_PALETTE[flavor]) || FLAVOR_PALETTE.oreo;
+  return `linear-gradient(180deg, ${f.c1}CC 0%, ${f.c1}66 55%, #ffffffEE 100%)`;
+}
+
+/**
  * Heuristic — when the Clover-backed menu doesn't carry a `flavor`
  * field, try to infer one from the item name so we still get the
  * right gradient swatch. Fallback to "oreo" (warm cream) if nothing

@@ -40,16 +40,23 @@ const cents = (c?: number) => Math.round(c ?? 0) / 100;
 
 // ─────────────────────────────────────────────────────────────
 // Customer-facing categories.
-// We collapse every Clover category into one of these four; anything
-// that doesn't map (Gift card, Extra Topping, Hot Drinks…) is hidden
-// from the website. Update CATEGORY_MAP to bucket new Clover categories.
-// Order here is the order the tabs render in.
+// We collapse every Clover category into one of these three; anything
+// that doesn't map (Gift card, Extra Topping, Hot Drinks, Cold
+// Drinks…) is hidden from the website. Update CATEGORY_MAP to bucket
+// new Clover categories. Order here is the order the tabs render in.
+//
+// NOTE: Cold Drinks is intentionally absent. We don't run strict
+// inventory on bottled / canned drinks (Red Bull, bottled water,
+// Frappuccinos, etc.), so customers placing an online order can't
+// reliably check whether we have a given item in stock. Keeping that
+// category in-store only avoids the "you ordered X but we're out"
+// problem. To re-enable, add `"cold drinks": "Cold Drinks"` here and
+// the matching chip in src/pages/Menu.tsx.
 // ─────────────────────────────────────────────────────────────
 const CUSTOMER_CATEGORIES = [
   "Rolled Ice Cream",
   "Bubble Tea",
   "Smoothie",
-  "Cold Drinks",
 ] as const;
 
 type CustomerCategory = (typeof CUSTOMER_CATEGORIES)[number];
@@ -62,7 +69,6 @@ const CATEGORY_MAP: Record<string, CustomerCategory> = {
   // Drinks
   "bubble tea": "Bubble Tea",
   smoothie: "Smoothie",
-  "cold drinks": "Cold Drinks",
 };
 
 function mapCategory(rawName: string | undefined): CustomerCategory | null {
@@ -126,6 +132,15 @@ export default async function handler(
         const isInStoreOnly = (name: string) =>
           name.toLowerCase().startsWith("sub ");
 
+        // For Bubble Tea items, the only meaningful customer choice is
+        // which boba — every flavor comes in a single fixed size and
+        // sweetness. Clover still has SIZE and SWEETNESS modifier groups
+        // attached for legacy reasons (POS-side workflow, and we can't
+        // detach them via the REST API on this merchant account), so we
+        // narrow to the Boba group on the way out.
+        const isBubbleTea = cat === "Bubble Tea";
+        const isBobaGroup = (name: string) => /\bboba\b/i.test(name);
+
         const modGroups: ModifierGroup[] =
           i.modifierGroups?.elements
             ?.map((ref) => {
@@ -152,7 +167,11 @@ export default async function handler(
                 })),
               };
             })
-            .filter((g) => !isInStoreOnly(g.name)) ?? [];
+            .filter((g) => {
+              if (isInStoreOnly(g.name)) return false;
+              if (isBubbleTea) return isBobaGroup(g.name);
+              return true;
+            }) ?? [];
 
         return [{
           id: i.id,

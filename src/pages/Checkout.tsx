@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useCart } from "../lib/cartStore";
 import { brand } from "../config/brand";
+import { useQueueEstimate } from "../lib/useQueueEstimate";
 import { Header } from "../components/ui/Layout";
 import { Display, Mono, Sticker } from "../components/ui/Typography";
 import { Button } from "../components/ui/Button";
@@ -37,6 +38,11 @@ export function Checkout() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Live wait estimate from /api/queue (computed off paid Clover orders).
+  // placed=false since the customer hasn't paid yet — server adds one
+  // ticket's prep time to the queue depth.
+  const { estimate } = useQueueEstimate({ placed: false });
+  const etaMinutes = estimate?.minutes;
 
   // Surface ?error=… on return-from-Clover.
   useEffect(() => {
@@ -67,24 +73,32 @@ export function Checkout() {
 
   if (lines.length === 0) return null;
 
-  const valid = Boolean(name.trim() && phone.trim());
+  // Only the name is required (it's the pickup-ticket label). Phone +
+  // email are optional — we don't have SMS pickup alerts; email is
+  // forwarded to Clover so they can send the receipt.
+  const valid = Boolean(name.trim());
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!valid) {
-      setError("Please enter your name and phone.");
+      setError("Please enter your name for the pickup ticket.");
       return;
     }
     setSubmitting(true);
     try {
       const order = await api.createOrder({
         customerName: name.trim(),
-        customerPhone: phone.trim(),
+        customerPhone: phone.trim() || undefined,
         customerEmail: email.trim() || undefined,
         lines,
       });
+      // Stash the customer name so the Confirmation page (after the
+      // Clover redirect) can update the order title to "Online: <name>"
+      // — Clover assigns its own order ID on Hosted Checkout payment
+      // and we need to rename it post-creation.
       sessionStorage.setItem("yolo-rollo-pending-order", order.orderId);
+      sessionStorage.setItem("yolo-rollo-customer-name", name.trim());
       window.location.href = order.checkoutUrl;
     } catch (err) {
       setError((err as Error).message ?? "Could not start payment.");
@@ -114,7 +128,9 @@ export function Checkout() {
                 2760 N Germantown Pkwy
               </div>
             </div>
-            <Sticker size="md">~8 MIN</Sticker>
+            <Sticker size="md">
+              {etaMinutes != null ? `~${etaMinutes} MIN` : "~8 MIN"}
+            </Sticker>
           </div>
         </Card>
 
@@ -124,20 +140,28 @@ export function Checkout() {
         </div>
 
         <div className="mt-2">
-          <FieldRow label="Name">
+          <FieldRow label="Name" hint="for pickup ticket">
+            {/*
+              This name is ONLY the pickup-ticket label that prints in
+              the kitchen — it's not the cardholder. The Clover Hosted
+              Checkout page will prompt for the actual cardholder name
+              separately. We intentionally use autoComplete="off" + a
+              non-standard input name so iOS Safari doesn't try to
+              autofill this with the saved billing name.
+            */}
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              autoComplete="name"
+              placeholder="What should we call you?"
+              autoComplete="off"
+              name="pickup-name"
               className="h-[50px] w-full rounded-2xl border-[1.5px] border-rollo-ink-line bg-rollo-card px-4 font-body text-[15px] text-rollo-ink outline-none transition focus:border-rollo-pink"
             />
           </FieldRow>
 
-          <FieldRow label="Phone" hint="for pickup-ready text">
+          <FieldRow label="Phone" hint="optional">
             <input
-              required
               type="tel"
               inputMode="tel"
               value={phone}
@@ -148,7 +172,7 @@ export function Checkout() {
             />
           </FieldRow>
 
-          <FieldRow label="Email" hint="optional">
+          <FieldRow label="Email" hint="for receipt">
             <input
               type="email"
               inputMode="email"
@@ -160,25 +184,6 @@ export function Checkout() {
             />
           </FieldRow>
         </div>
-
-        {/* ─── PAYMENT METHOD ─── */}
-        <div className="mt-4">
-          <Mono size={10}>PAYMENT METHOD</Mono>
-        </div>
-        <Card className="mt-2 flex items-center gap-3">
-          <div className="grid h-[30px] w-[46px] place-items-center rounded-md bg-rollo-ink font-display text-[10px] font-extrabold text-rollo-card">
-            PAY
-          </div>
-          <div className="flex-1">
-            <div className="font-display text-sm font-bold">
-              Apple Pay / Card
-            </div>
-            <Mono size={10}>SECURE · CLOVER HOSTED</Mono>
-          </div>
-          <Mono size={10} color="#EC1E79" weight={700}>
-            CHANGE
-          </Mono>
-        </Card>
 
         {/* ─── Order summary ─── */}
         <div className="card-rollo mt-5 px-4 py-3.5">
@@ -220,6 +225,28 @@ export function Checkout() {
             {error}
           </div>
         )}
+
+        {/*
+          Temporary notice: Apple Pay auto-voids charges on this merchant
+          account even after domain verification + reCAPTCHA disable.
+          Investigation is open with Clover Support (ref charge
+          MJB5ESMAH8WKG). Cards work fine. Remove this banner once Clover
+          enables wallet payments at the risk-underwriting level.
+        */}
+        {/* <div className="mt-4 flex items-start gap-2 rounded-rollo-card border border-rollo-pink-soft bg-rollo-paper-soft px-3 py-2.5">
+          <span
+            aria-hidden
+            className="mt-[1px] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rollo-pink text-[10px] font-bold leading-none text-white"
+          >
+            !
+          </span>
+          <div className="text-[12px] leading-snug text-rollo-ink-soft">
+            <span className="font-bold text-rollo-pink">
+              Apple Pay temporarily unavailable.
+            </span>{" "}
+            Please pay with a card — we’re working on it.
+          </div>
+        </div> */}
 
         <Button
           type="submit"

@@ -4,11 +4,11 @@ import type { MenuItem, Modifier, ModifierGroup } from "../types";
 import { useCart } from "../lib/cartStore";
 import { flyToCart } from "../lib/flyToCart";
 import { Display, Mono, Sticker } from "./ui/Typography";
-import { ProductPhoto, photoLayoutId } from "./ui/ProductPhoto";
+import { ProductVisual, photoLayoutId } from "./ui/ProductVisual";
 import { Icon } from "./ui/Icon";
 import { Button } from "./ui/Button";
 import { QtyStepper } from "./ui/CartItem";
-import { inferFlavor } from "../lib/flavors";
+import { flavorCardBg, inferFlavor } from "../lib/flavors";
 import { RollPreview } from "./RollPreview";
 
 /**
@@ -27,9 +27,11 @@ import { RollPreview } from "./RollPreview";
  * the preview stays visible while the customer scrolls through Base /
  * Mix-in / Topping pills.
  *
- * Pricing rule (applies to all items):
+ * Pricing rule (applies to every roll — BYO and signatures alike):
  *   - Each modifier group's FIRST selection is included in the item's
- *     base price.
+ *     base price. For signature rolls the default mix-in / topping
+ *     comes pre-selected, so the "included" ingredient counts toward
+ *     this freebie automatically.
  *   - Additional selections in Mix-in / Topping groups add $1 each.
  *   - (Base groups can only ever have 1 selection, so the rule is moot.)
  */
@@ -51,19 +53,21 @@ function isExtrasGroup(group: ModifierGroup): boolean {
  * Walks the selected modifier IDs and applies the freebie pricing rule
  * for Mix-in / Topping groups.
  *
- * Two flavors of the rule:
+ * Two flavors of the rule, depending on item type:
  *
  *   - BYO ("Customize Your Own Roll"): the customer is building from
  *     scratch, so the FIRST selection in each Mix-in / Topping group
- *     is included in the base price ($6.99). Selections 2+ cost $1.
+ *     is included in the base price. Selections 2+ cost $1.
  *
- *   - Signature rolls / Yolo Signatures / etc.: the recipe's
- *     mix-in/topping is already baked into the base price. ANY mix-in
- *     or topping the customer adds is an extra → $1 each from the
- *     first selection on, no freebie.
+ *   - Special / Yolo Signature rolls (predefined recipes): the
+ *     recipe's mix-in/topping is already baked into the base price
+ *     and is presented as a read-only "What's included" section the
+ *     customer can't toggle. ANY mix-in or topping the customer adds
+ *     on top is an EXTRA → $1 each from the first selection on, no
+ *     freebie.
  *
  * The Set iteration preserves insertion (pick) order, so "first" =
- * the modifier the customer tapped first within the group.
+ * the earliest-inserted modifier in the group.
  */
 function adjustedModifiers(
   item: MenuItem,
@@ -86,6 +90,12 @@ function adjustedModifiers(
     }
   }
   return out;
+}
+
+/** True for the Base modifier group (which only the BYO modal exposes
+ *  — predefined rolls hide it because the base is dictated by the recipe). */
+function isBaseGroup(group: ModifierGroup): boolean {
+  return /^base\b/i.test(group.name);
 }
 
 export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
@@ -131,8 +141,10 @@ export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
 
   // Compute chosen modifiers each render so the Add button + total
   // reflect the latest selection. Pricing rule:
-  //   - BYO: first mix-in/topping free, extras +$1
-  //   - Signature/Yolo: ALL mix-ins/toppings are extras (+$1 each)
+  //   - BYO: first mix-in / topping free, extras +$1
+  //   - Special / Yolo signature rolls: the recipe's ingredients are
+  //     already in the base price (and hidden from the customizer), so
+  //     ANY mix-in or topping the customer picks is an extra → $1 each.
   const chosenMods: Modifier[] = useMemo(() => {
     if (!item) return [];
     return adjustedModifiers(item, selected, isBYO);
@@ -241,13 +253,17 @@ export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
         </div>
       ) : (
         // ─── Non-BYO: classic hero band ──────────────────────────────
+        // Hero background is the same soft flavor tint we use on the
+        // grid cards so the modal feels like a continuation of the
+        // card the customer tapped (and the photo's transparent
+        // cutout sits on a consistent surface). When there's no
+        // imageUrl (gradient swatch fallback) the boxShadow style
+        // makes the swatch look 3D; when there IS an imageUrl,
+        // ProductPhoto ignores boxShadow and uses its own drop-shadow.
         <div
           ref={heroRef}
           className="relative px-5 pb-7 pt-6"
-          style={{
-            background:
-              "linear-gradient(180deg, #FFF1F5 0%, #FBE4ED 100%)",
-          }}
+          style={{ background: flavorCardBg(flavor) }}
         >
           <button
             type="button"
@@ -259,14 +275,18 @@ export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
           </button>
 
           <div className="mt-2 flex justify-center">
-            <ProductPhoto
-              flavor={flavor}
-              size={140}
+            <ProductVisual
+              item={item}
+              size={item.category === "Bubble Tea" || item.category === "Smoothie" ? 170 : 150}
               layoutId={photoLayoutId(item.id)}
-              style={{
-                boxShadow:
-                  "0 16px 30px -8px rgba(184,21,96,0.30), inset 0 -6px 16px rgba(0,0,0,0.12)",
-              }}
+              style={
+                item.imageUrl
+                  ? undefined
+                  : {
+                      boxShadow:
+                        "0 16px 30px -8px rgba(184,21,96,0.30), inset 0 -6px 16px rgba(0,0,0,0.12)",
+                    }
+              }
             />
           </div>
 
@@ -289,27 +309,50 @@ export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
               {item.tagline ?? item.description}
             </p>
           )}
-          {/* Subtle "add extras" hint so customers know it's an option */}
-          <p className="mx-auto mt-3 max-w-[320px] text-center text-[11px] text-rollo-ink-muted">
-            Add extra mix-ins or toppings · <span className="font-bold text-rollo-pink">$1 each</span>
-          </p>
+          {/* Subtle "add extras" hint — only render when the item
+              actually has Mix-in / Topping groups. Bubble teas,
+              smoothies, etc. don't have those, so the hint would be a
+              lie. */}
+          {item.modifierGroups.some(isExtrasGroup) && (
+            <p className="mx-auto mt-3 max-w-[320px] text-center text-[11px] text-rollo-ink-muted">
+              Add extra mix-ins or toppings · <span className="font-bold text-rollo-pink">$1 each</span>
+            </p>
+          )}
         </div>
       )}
 
-      {/* Modifier groups */}
+      {/* Modifier groups.
+       *
+       *  For predefined rolls (non-BYO that have Mix-in / Topping groups
+       *  attached — i.e. Special Rolls and Yolo Signatures), the Base
+       *  group is dictated by the recipe and hidden from the customizer.
+       *  The internal selection still pre-selects the first Base
+       *  modifier (so any min=1 validation passes), but the customer
+       *  doesn't see a Base picker. They see a read-only "What's
+       *  included" banner above the Mix-in / Topping "Add extras"
+       *  pickers. */}
       <div className="bg-rollo-card px-5 pt-3">
-        {item.modifierGroups.map((group) => (
-          <ModifierGroupPills
-            key={group.id}
-            group={group}
-            selected={selected[group.id] ?? new Set()}
-            onToggle={(mod) => toggle(group, mod)}
-            // BYO gets 1 free of each Mix-in / Topping; signatures
-            // charge $1 per extra from the first selection on (the
-            // recipe's default is already in the base price).
-            isByoItem={isBYO}
-          />
-        ))}
+        {!isBYO && item.tagline && item.modifierGroups.some(isExtrasGroup) && (
+          <div className="mb-4 rounded-rollo-card border border-rollo-ink-line bg-rollo-paper-soft px-3.5 py-3">
+            <Mono size={10} color="rgba(42,23,34,0.55)">
+              WHAT’S INCLUDED
+            </Mono>
+            <p className="mt-1 font-body text-[13px] leading-snug text-rollo-ink">
+              {item.tagline}
+            </p>
+          </div>
+        )}
+        {item.modifierGroups
+          .filter((g) => isBYO || !isBaseGroup(g))
+          .map((group) => (
+            <ModifierGroupPills
+              key={group.id}
+              group={group}
+              selected={selected[group.id] ?? new Set()}
+              onToggle={(mod) => toggle(group, mod)}
+              isByoItem={isBYO}
+            />
+          ))}
       </div>
 
       {/* Sticky CTA row */}
@@ -388,9 +431,12 @@ export function ItemModal({ item, open, onClose, mode = "sheet" }: Props) {
 //
 // Pricing rules driven by `isByoItem`:
 //   - true  (BYO): first selection in a Mix-in / Topping group is free,
-//                  selections 2 and 3 cost $1 each.
-//   - false (Signature / Yolo): ALL Mix-in / Topping selections are
-//                  extras → $1 each from the first selection on.
+//                  selections 2+ cost $1 each.
+//   - false (Special / Yolo signature rolls): the recipe's mix-in /
+//                  topping is already baked into the base price and
+//                  hidden from this picker. Anything the customer
+//                  selects here is an EXTRA → $1 each from the first
+//                  selection on, no freebie.
 //
 // Selection order tracking uses the Set's insertion order (Sets preserve
 // it in JS), so "first" means "the pill the customer tapped first".
@@ -419,11 +465,15 @@ function ModifierGroupPills({
     ? Math.max(0, orderedSelectedIds.length - freebieAllowed)
     : 0;
 
-  // Hint copy reflects the freebie rule for the current item type.
+  // For predefined rolls the picker is purely an "add extras"
+  // affordance — rename the group label to make that obvious.
+  const displayName =
+    !isByoItem && extrasGroup ? `Add extra ${group.name.toLowerCase()}s` : group.name;
+
   const hint = (() => {
     if (group.maxSelections === 1) return "Choose 1";
     if (extrasGroup && isByoItem) return "1 free · extras $1.00 each";
-    if (extrasGroup) return "Add extras · $1.00 each";
+    if (extrasGroup) return "$1.00 each";
     return `Up to ${group.maxSelections}`;
   })();
 
@@ -431,7 +481,7 @@ function ModifierGroupPills({
     <div className="mb-5">
       <div className="mb-2.5 flex items-baseline justify-between">
         <Display size={16} as="h3">
-          {group.name}
+          {displayName}
         </Display>
         <span className="text-[11px] text-rollo-ink-muted">{hint}</span>
       </div>

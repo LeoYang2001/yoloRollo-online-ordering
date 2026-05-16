@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { api } from "../lib/api";
 import { useCart } from "../lib/cartStore";
 import { brand } from "../config/brand";
+import { useQueueEstimate } from "../lib/useQueueEstimate";
 import type { OrderStatus } from "../types";
 import { Display, Mono, Sticker } from "../components/ui/Typography";
 import { Button } from "../components/ui/Button";
@@ -39,12 +40,24 @@ import { Icon } from "../components/ui/Icon";
  * On mount, clears the cart so the next visit starts fresh.
  */
 
-/** UI ladder used by the Status card. */
+/** UI ladder used by the Status card. The status text drives the
+ *  customer's confidence that the order is moving — kept friendly
+ *  but generic so it works for rolled ice cream, bubble teas, and
+ *  smoothies alike. */
 const STEPS = [
-  { key: "paid", label: "Paid" },
-  { key: "preparing", label: "Rolling now" },
+  { key: "paid", label: "Order received" },
+  { key: "preparing", label: "Making your order" },
   { key: "ready", label: "Ready for pickup" },
 ] as const;
+
+/** Compact "how long ago" formatter for the live update indicator. */
+function timeAgo(ts: number): string {
+  const sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (sec < 5) return "just now";
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  return `${min}m ago`;
+}
 
 /** Map server state → which step index is "active". */
 function stepIndexFor(state: OrderStatus["state"] | undefined): number {
@@ -63,11 +76,95 @@ function stepIndexFor(state: OrderStatus["state"] | undefined): number {
 }
 
 export function Confirmation() {
-  const { orderId = "" } = useParams();
+  const { orderId: paramOrderId = "" } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const clearCart = useCart((s) => s.clear);
   const [status, setStatus] = useState<OrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Two ways the orderId can arrive here:
+  //   1. `/confirmation/:orderId` path param — used by the inline
+  //      payment path (we pre-create the order, know its ID).
+  //   2. `/confirmation?order_id=…` query param — used by Clover's
+  //      Hosted Checkout success redirect (Clover assigns its own
+  //      order ID on payment and appends it as a query param).
+  // We accept either. Both Clover variants of the param name
+  // (`order_id`, `orderId`) get checked. Values that look like an
+  // un-substituted Clover placeholder (e.g. literal "{order_id}") are
+  // ignored — happens when Clover's templated-redirect support is off
+  // on a given merchant, in which case Clover should also auto-append
+  // a real order_id alongside the literal one.
+  const isReal = (v: string | null | undefined): v is string =>
+    !!v && !v.startsWith("{");
+  const orderId = useMemo(() => {
+    const candidates = [
+      paramOrderId,
+      searchParams.get("order_id"),
+      searchParams.get("orderId"),
+    ];
+    for (const c of candidates) {
+      if (isReal(c)) return c;
+    }
+    return "";
+  }, [paramOrderId, searchParams]);
+
+  // Fallback: if Clover redirected without a real order_id (its
+  // Hosted Checkout for this merchant ignores the {order_id}
+  // placeholder AND doesn't auto-append), look up which order got
+  // created for our checkout session id (stashed in sessionStorage
+  // before we redirected). The session→order mapping is set by the
+  // /api/clover/hosted-checkout-webhook handler in KV, so the
+  // typical lookup is one fast KV hit; we retry with backoff because
+  // the webhook may fire a beat AFTER the customer is already on
+  // this page.
+  useEffect(() => {
+    if (orderId) return;
+    const sessionId = sessionStorage.getItem("yolo-rollo-pending-order");
+    if (!sessionId || sessionId.startsWith("{")) return;
+
+    let cancelled = false;
+    // Try at 0, 0.7, 1.5, 2.5, 4, 6, 9, 13s — total ~13s of patience.
+    const delays = [0, 700, 1500, 2500, 4000, 6000, 9000, 13000];
+
+    const tryFetch = async (attempt: number) => {
+      if (cancelled || attempt >= delays.length) return;
+      try {
+        const r = await fetch(
+          `/api/checkout-session/${encodeURIComponent(sessionId)}`,
+        );
+        if (!r.ok) throw new Error(String(r.status));
+        const data = (await r.json()) as { orderId?: string | null };
+        if (cancelled) return;
+        if (data.orderId) {
+          navigate(
+            `/confirmation?order_id=${encodeURIComponent(data.orderId)}`,
+            { replace: true },
+          );
+          return;
+        }
+        // No order yet — schedule the next retry with the configured
+        // delay before this attempt.
+        if (attempt + 1 < delays.length) {
+          setTimeout(() => tryFetch(attempt + 1), delays[attempt + 1]);
+        }
+      } catch {
+        if (attempt + 1 < delays.length) {
+          setTimeout(() => tryFetch(attempt + 1), delays[attempt + 1]);
+        }
+      }
+    };
+    tryFetch(0);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, navigate]);
+
+  // Live ETA from /api/queue (computed off paid Clover orders).
+  // placed=true since the order is already in the queue at this point.
+  const { estimate } = useQueueEstimate({ placed: true });
+  const etaMinutes = estimate?.minutes;
 
   // Once we land here, payment has succeeded — empty the cart so the
   // next visit starts fresh.
@@ -75,27 +172,82 @@ export function Confirmation() {
     clearCart();
   }, [clearCart]);
 
-  // Poll status every 5s.
+  // Rename the order's title to "Online: <name>" right after Clover
+  // creates it via Hosted Checkout. This is the post-payment hook
+  // that gives the kitchen a human-readable ticket name instead of
+  // the random alphanumeric Clover assigns. Fire-and-forget.
+  useEffect(() => {
+    if (!orderId) return;
+    const name = sessionStorage.getItem("yolo-rollo-customer-name");
+    if (!name) return;
+    fetch(
+      `/api/orders/${encodeURIComponent(orderId)}/title`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: `Online: ${name}` }),
+      },
+    ).catch(() => {
+      /* non-blocking — if it fails the kitchen still sees the order */
+    });
+    // Wipe so refreshing the page doesn't keep renaming the same order.
+    sessionStorage.removeItem("yolo-rollo-customer-name");
+  }, [orderId]);
+
+  // Status polling — fast then slow.
+  //
+  // The first ~30 seconds after a customer lands here are when the
+  // order moves fastest through Clover (pending_payment → paid →
+  // preparing). We poll every 2s during that window so the status
+  // card + ticket number snap into place near-instantly. After 30s
+  // we back off to 5s — by then the order is in steady "preparing"
+  // state and there's no UX benefit to chatty polling.
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   useEffect(() => {
     if (!orderId) return;
     let stop = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const startedAt = Date.now();
+
     const poll = async () => {
       try {
         const s = await api.getOrderStatus(orderId);
-        if (!stop) setStatus(s);
+        if (!stop) {
+          setStatus(s);
+          setLastUpdated(Date.now());
+        }
       } catch (e) {
         if (!stop) setError((e as Error).message);
+      } finally {
+        if (!stop) {
+          // Choose next interval based on how long we've been polling.
+          const elapsed = Date.now() - startedAt;
+          const nextDelay = elapsed < 30_000 ? 2_000 : 5_000;
+          timeoutId = setTimeout(poll, nextDelay);
+        }
       }
     };
     poll();
-    const id = setInterval(poll, 5_000);
+
     return () => {
       stop = true;
-      clearInterval(id);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [orderId]);
 
-  const ticket = status?.ticketNumber ?? "A-——";
+  // Ticket = last 6 chars of the Clover order id, uppercased and
+  // prefixed with `#` — same format the KDS prints, so staff can match
+  // the customer's screen to their kitchen ticket at a glance. We
+  // synthesize it from `orderId` immediately so the ticket pops in
+  // before /api/orders/{id}/status returns. When the poll lands, the
+  // server-provided value takes over (identical string in practice;
+  // this is just a no-flicker safety net).
+  const ticket = useMemo(() => {
+    if (status?.ticketNumber) return `#${status.ticketNumber}`;
+    if (orderId) return `#${orderId.slice(-6).toUpperCase()}`;
+    return "#------";
+  }, [status?.ticketNumber, orderId]);
+
   const activeIdx = stepIndexFor(status?.state);
 
   const dateLine = new Date().toLocaleDateString("en-US", {
@@ -172,7 +324,7 @@ export function Confirmation() {
               ETA
             </Mono>
             <div className="mt-0.5 whitespace-nowrap font-display text-[18px] font-extrabold">
-              ~8 min
+              {etaMinutes != null ? `~${etaMinutes} min` : "~8 min"}
             </div>
           </div>
         </div>
@@ -214,6 +366,21 @@ export function Confirmation() {
           })}
         </div>
       </div>
+
+      {/* Tiny "as of …" line under the status card so customers can tell
+          the page is live and not stuck. Pulses subtly so the eye
+          notices an update happened. */}
+      {lastUpdated && (
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-rollo-ink-muted">
+          <span
+            key={lastUpdated}
+            className="h-1.5 w-1.5 animate-ping rounded-full bg-rollo-pink opacity-75"
+          />
+          <Mono size={9} color="rgba(42,23,34,0.45)">
+            UPDATED {timeAgo(lastUpdated)}
+          </Mono>
+        </div>
+      )}
 
       {error && (
         <p className="mt-3 text-xs text-rollo-pink">
