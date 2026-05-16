@@ -147,32 +147,39 @@ export default async function handler(
   try {
     const since = Date.now() - 5 * 60 * 1000;
     const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
+    // IMPORTANT: `expand=payments` is required — without it Clover's
+    // order list returns a stale `paymentState: "OPEN"` for every
+    // order regardless of whether payment succeeded. Adding payments
+    // to the expansion forces the API to compute the real
+    // paymentState. (lineItems is needed for the cid match.)
     const list = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?${filter}&expand=lineItems&limit=20`,
+      `/orders?${filter}&expand=lineItems,payments&limit=20`,
     );
-    const paid = (list.elements ?? []).filter(
-      (o) => o.paymentState === "PAID",
-    );
+    const all = list.elements ?? [];
 
     if (cid) {
+      // Match against ALL recent orders, not just `paid`. The cid is
+      // unique-per-checkout, so finding it on any order means that's
+      // ours — even on the off chance paymentState is mid-update.
       const marker = `ref:${cid.toUpperCase()}`;
-      const exact = paid.find((o) =>
+      const exact = all.find((o) =>
         o.lineItems?.elements?.some((li) =>
           (li.note ?? "").toUpperCase().includes(marker),
         ),
       );
       if (exact) {
         console.log(
-          `[checkout-session] cid match cid=${cid} -> order=${exact.id}`,
+          `[checkout-session] cid match cid=${cid} -> order=${exact.id} (paymentState=${exact.paymentState})`,
         );
         return res.status(200).json({ orderId: exact.id, via: "cid-match" });
       }
       console.warn(
-        `[checkout-session] cid=${cid} not found in last-5-min paid orders ` +
-          `(scanned ${paid.length} orders). Falling back to most-recent.`,
+        `[checkout-session] cid=${cid} not found in last-5-min orders ` +
+          `(scanned ${all.length}). Falling back to most-recent paid.`,
       );
     }
 
+    const paid = all.filter((o) => o.paymentState === "PAID");
     const mostRecent = [...paid].sort(
       (a, b) => (b.createdTime ?? 0) - (a.createdTime ?? 0),
     )[0];

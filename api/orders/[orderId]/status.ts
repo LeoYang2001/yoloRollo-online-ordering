@@ -112,8 +112,13 @@ export default async function handler(
     // so it'll appear in the queue list).
     const since = Date.now() - LOOKBACK_MS;
     const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
+    // IMPORTANT: `expand=payments` is required — without it Clover's
+    // order list returns a stale `paymentState: "OPEN"` for every
+    // order regardless of whether payment actually succeeded. Adding
+    // payments to the expansion forces the API to compute the real
+    // paymentState. (lineItems is needed by orderNeedsPrep below.)
     const queueResp = await cloverRest<{ elements?: CIOrder[] }>(
-      `/orders?expand=lineItems&${filter}&limit=100`,
+      `/orders?expand=lineItems,payments&${filter}&limit=100`,
     );
     const allOrders = queueResp.elements ?? [];
 
@@ -127,7 +132,11 @@ export default async function handler(
       // ticketNumber when the order does exist but is older than
       // 15 min, AND still cover the 404 case gracefully.
       try {
-        const fallback = await cloverRest<CIOrder>(`/orders/${orderId}`);
+        // Same `?expand=payments` quirk as the list query above —
+        // without it Clover returns stale paymentState=OPEN.
+        const fallback = await cloverRest<CIOrder>(
+          `/orders/${orderId}?expand=payments`,
+        );
         return res.status(200).json({
           orderId,
           ticketNumber: ticketNumber(orderId),
