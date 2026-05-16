@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "../lib/cartStore";
 import { brand } from "../config/brand";
+import { useQueueEstimate } from "../lib/useQueueEstimate";
 import { Header, EmptyState } from "../components/ui/Layout";
 import { Mono, Sticker } from "../components/ui/Typography";
 import { Button } from "../components/ui/Button";
@@ -31,6 +32,11 @@ export function Cart() {
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
   const navigate = useNavigate();
+  // Live pickup-wait estimate from /api/queue (computed off paid Clover
+  // orders). placed=false because the customer hasn't paid yet — the
+  // API adds 1 ticket's prep time.
+  const { estimate } = useQueueEstimate({ placed: false });
+  const etaMinutes = estimate?.minutes;
 
   // Local tax estimate using the merchant's configured rate; Clover
   // re-calculates the precise tax during Hosted Checkout.
@@ -103,7 +109,7 @@ export function Cart() {
                 PICKUP IN
               </Mono>
               <div className="mt-1 whitespace-nowrap font-display text-[30px] font-extrabold tracking-[-0.02em]">
-                ~8 min
+                {etaMinutes != null ? `~${etaMinutes} min` : "~8 min"}
               </div>
               <div className="mt-2.5 flex items-center gap-1.5 text-white/85">
                 <Icon.pin />

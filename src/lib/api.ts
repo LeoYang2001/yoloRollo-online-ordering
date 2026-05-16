@@ -3,7 +3,13 @@
  * The browser never talks to Clover directly — everything goes through
  * Vercel serverless functions where the Clover API token lives.
  */
-import type { Menu, OrderRequest, OrderResponse, OrderStatus } from "../types";
+import type {
+  Menu,
+  OrderRequest,
+  OrderResponse,
+  OrderStatus,
+  QueueEstimate,
+} from "../types";
 
 async function http<T>(input: string, init?: RequestInit): Promise<T> {
   const res = await fetch(input, {
@@ -35,4 +41,15 @@ export const api = {
     }),
   getOrderStatus: (orderId: string) =>
     http<OrderStatus>(`/api/orders/${encodeURIComponent(orderId)}/status`),
+  /**
+   * Live wait-time estimate, computed server-side from paid Clover orders.
+   *
+   *   placed=false (default) — caller's order is NOT yet in the queue
+   *     (Cart / Checkout). The server adds 1 ticket worth of prep time
+   *     for the upcoming order.
+   *   placed=true — caller's order is already in the queue
+   *     (Confirmation page, post-payment). No extra time is added.
+   */
+  getQueueEstimate: (placed = false) =>
+    http<QueueEstimate>(`/api/queue?placed=${placed ? "true" : "false"}`),
 };

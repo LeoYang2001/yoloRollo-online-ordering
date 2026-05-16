@@ -4,35 +4,75 @@ import { flavorGradient } from "../../lib/flavors";
 import type { FlavorKey } from "../../types";
 
 /**
- * Circular flavor-gradient swatch used as a stand-in for a product
- * photo. When real product photography exists, swap to <img> — the
- * 50% border-radius and soft shadow are the visual signature, so
- * keep those.
+ * Circular product image. Two rendering paths:
  *
+ *   - When `imageUrl` is provided, render an <img> (real photography
+ *     for signature rolls — public/signatures/*.jpg, public/items/*.jpg, etc.).
+ *   - Otherwise fall back to the flavor-gradient swatch (used for items
+ *     without a photo yet, like bubble teas and BYO).
+ *
+ * In both cases the 50% border-radius + soft shadow are kept — that's
+ * the visual signature shared across the menu, cart, and confirmation
+ * screens. `layoutId` enables framer-motion's shared-element transition
+ * so the photo morphs between card and modal positions seamlessly.
+ *
+ *   <ProductPhoto imageUrl="/signatures/yolo-1.jpg" size={92} />
  *   <ProductPhoto flavor="strawberry" size={92} />
- *
- * When `layoutId` is provided, the inner div becomes a motion.div so
- * framer-motion can morph the photo across mount boundaries (e.g.
- * carousel card → full-page detail, grid card → bottom-sheet hero).
- * The layoutId should be unique per item (e.g. `photo-{item.id}`).
  */
 interface Props {
+  /** Real product photograph. Wins over `flavor` when set. */
+  imageUrl?: string;
+  /** Fallback gradient flavor when no imageUrl is set. */
   flavor?: FlavorKey;
   size?: number;
   shape?: "circle" | "rect";
   className?: string;
   style?: CSSProperties;
   layoutId?: string;
+  /** Alt text. Defaults to empty (treated as decorative). */
+  alt?: string;
 }
 
 export function ProductPhoto({
+  imageUrl,
   flavor,
   size = 88,
   shape = "circle",
   className,
   style,
   layoutId,
+  alt = "",
 }: Props) {
+  // ─── Real photograph branch ──────────────────────────────────────
+  // No circular container, no background, no shadow. The PNG cutout
+  // lands directly on whatever surface the parent card provides. We
+  // `object-contain` so the product's natural silhouette never gets
+  // cropped, and slightly increase the bounding box so the unclipped
+  // photo fills similar visual weight to the old circular swatch.
+  if (imageUrl) {
+    const imgSize = Math.round(size * 1.15);
+    return (
+      <motion.img
+        layoutId={layoutId}
+        src={imageUrl}
+        alt={alt}
+        loading="lazy"
+        draggable={false}
+        className={`relative shrink-0 ${className ?? ""}`}
+        style={{
+          width: imgSize,
+          height: imgSize,
+          objectFit: "contain",
+          // Subtle drop shadow on the silhouette so the cutout still
+          // reads as a 3D object on the card surface, not a sticker.
+          filter: "drop-shadow(0 6px 14px rgba(20,8,14,0.18))",
+          ...style,
+        }}
+      />
+    );
+  }
+
+  // ─── Gradient swatch fallback (no photo yet) ─────────────────────
   const radius = shape === "rect" ? 18 : "50%";
   const baseStyle: CSSProperties = {
     width: size,

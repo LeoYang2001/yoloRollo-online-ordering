@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../lib/api";
-import type { Menu as MenuT, MenuItem } from "../types";
+import type { FlavorKey, Menu as MenuT, MenuItem } from "../types";
 import { inferFlavor } from "../lib/flavors";
 import { useCart } from "../lib/cartStore";
+import { flyToCart } from "../lib/flyToCart";
 import { ItemModal } from "../components/ItemModal";
 import { Mono } from "../components/ui/Typography";
 import { Icon } from "../components/ui/Icon";
@@ -30,9 +31,14 @@ import { ProductCard, FeaturedCard } from "../components/ui/Cards";
 function isYoloSignature(item: MenuItem): boolean {
   return /^yolo\s+signature/i.test(item.name);
 }
-function isSignatureSpecial(item: MenuItem): boolean {
-  return /^signature\s+roll/i.test(item.name);
+// Matches either the new "Special Roll #N — ..." names or the older
+// "Signature Roll #N — ..." names from before the Clover rename, so a
+// half-renamed merchant inventory still resolves cleanly.
+function isSpecialRoll(item: MenuItem): boolean {
+  return /^(special|signature)\s+roll/i.test(item.name);
 }
+// Back-compat alias — older code may still reference the old name.
+const isSignatureSpecial = isSpecialRoll;
 function isBuildYourOwn(item: MenuItem): boolean {
   return /(customize|build)\s+your\s+own/i.test(item.name);
 }
@@ -51,8 +57,12 @@ interface Chip {
 
 const CHIPS: Chip[] = [
   {
+    // We keep the chip id "signatures" so any persisted state / deep
+    // links from earlier deploys still resolve. The customer-facing
+    // label is "Special Rolls" — the carousel of unnumbered hero items
+    // up top remains "Yolo Signatures" and stays visually distinct.
     id: "signatures",
-    short: "Signature Rolls",
+    short: "Special Rolls",
     icon: "cup",
     sub: "Two ingredients. Freshly rolled. Totally you.",
     match: isSignatureSpecial,
@@ -78,13 +88,12 @@ const CHIPS: Chip[] = [
     sub: "Blended & delicious · 20 oz",
     match: (i) => i.category === "Smoothie" || i.category === "Smoothies",
   },
-  {
-    id: "drinks",
-    short: "Drinks",
-    icon: "cup",
-    sub: "Cold & refreshing",
-    match: (i) => i.category === "Cold Drinks" || i.category === "Drinks",
-  },
+  // Cold Drinks intentionally absent from the online menu. We don't
+  // run strict inventory on bottled/canned drinks (Red Bull, bottled
+  // water, Frappuccinos, etc.) so we can't honor online orders for
+  // them reliably. They remain available in-store via the POS. To
+  // re-enable, restore the chip below and re-add the "cold drinks"
+  // mapping in api/menu.ts.
 ];
 
 // ─── Tag inference ────────────────────────────────────────────────
@@ -102,15 +111,83 @@ function inferTags(item: MenuItem): string[] {
   return [];
 }
 
+/**
+ * Pull a 1–6 signature number out of an item name. Matches:
+ *
+ *   "Yolo Signature #1 - Strawberry Classic"  → "1"
+ *   "Yolo Signature 2"                          → "2"
+ *   "Signature Roll #3"                         → "3"  (legacy name)
+ *   "Special Roll #3 - Choco Oreo"              → "3"  (current name)
+ *
+ * Returns undefined for non-roll items or numbers outside 1–6.
+ */
+function inferSignatureNumber(name: string): string | undefined {
+  const n = name.toLowerCase();
+  if (!/(yolo\s+signature|signature\s+roll|special\s+roll)/.test(n))
+    return undefined;
+  const match = name.match(/#\s*([1-6])\b/) ?? name.match(/\b([1-6])\b/);
+  return match?.[1];
+}
+
+/**
+ * Map a Yolo Signature item (no number — the unnumbered carousel
+ * heroes) to its hero photograph. Right now we have two:
+ *
+ *   "Yolo Signature — Strawberry Crumble"   → /signatures/yolo_1.png
+ *   "Yolo Signature — Waffle Bowl Classic"  → /signatures/yolo_2.png
+ *
+ * To add a third hero in the future, drop the photo in
+ * public/signatures/ and append the pattern + filename here.
+ */
+function yoloSignatureImage(name: string): string | undefined {
+  const n = name.toLowerCase();
+  if (!/yolo\s+signature/.test(n)) return undefined;
+  if (/strawberry\s+crumble/.test(n)) return "/signatures/yolo_1.png";
+  if (/waffle\s+bowl/.test(n)) return "/signatures/yolo_2.png";
+  return undefined;
+}
+
+/**
+ * Hand-tuned base-flavor key per signature roll. The auto `inferFlavor`
+ * regex picks the first matching pattern in the item name, which gets
+ * the wrong color for compound names ("Choco Oreo" matches `oreo`
+ * before `chocolate`; "Coconut M&M" matches `m&m` before `coconut`).
+ * This override map ensures each signature's card background reads
+ * like its actual base ice cream.
+ */
+const SIGNATURE_FLAVOR_OVERRIDES: Record<string, FlavorKey> = {
+  "1": "oreo", //       Cookies & Cream
+  "2": "strawberry", // Strawberry Cheesecake
+  "3": "chocolate", //  Choco Oreo
+  "4": "mango", //      Mango Strawberry
+  "5": "coconut", //    Coconut M&M
+  "6": "vanilla", //    Vanilla Cheesecake
+};
+
 // Helper: enrich a raw Clover MenuItem with the design-specific fields
-// (flavor key, tags). Returns a new object so downstream components can
-// rely on them being present.
+// (flavor key, tags, signature number, photo URL). Returns a new object
+// so downstream components can rely on them being present.
 function enrich(item: MenuItem): MenuItem {
+  const sigNumber = item.number ?? inferSignatureNumber(item.name);
+  // Photo precedence: explicit imageUrl from Clover (none today) →
+  // numbered Signature Roll photo → unnumbered Yolo Signature photo.
+  const imageUrl =
+    item.imageUrl ??
+    (sigNumber ? `/signatures/signature_${sigNumber}.png` : undefined) ??
+    yoloSignatureImage(item.name);
+  // Flavor precedence: explicit flavor → numbered-signature override →
+  // name-based heuristic.
+  const flavor =
+    item.flavor ??
+    (sigNumber ? SIGNATURE_FLAVOR_OVERRIDES[sigNumber] : undefined) ??
+    inferFlavor(item.name);
   return {
     ...item,
-    flavor: item.flavor ?? inferFlavor(item.name),
+    flavor,
     tags: inferTags(item),
     tagline: item.tagline ?? item.description,
+    number: sigNumber,
+    imageUrl,
   };
 }
 
@@ -130,8 +207,14 @@ export function MenuPage() {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Live cart line counts, keyed by itemId — used to swap the + button
-  // on ProductCard for a "×N in cart" indicator.
+  // on ProductCard for a stepper. We also track the *most recent line
+  // id* per itemId so the stepper knows which line to mutate when the
+  // customer increments / decrements from the menu grid (an item can
+  // appear as multiple cart lines if added with different modifier
+  // combinations; the stepper operates on the latest configuration).
   const cartLines = useCart((s) => s.lines);
+  const addItem = useCart((s) => s.addItem);
+  const setQuantity = useCart((s) => s.setQuantity);
   const cartCountByItemId = useMemo(() => {
     const map = new Map<string, number>();
     for (const l of cartLines) {
@@ -139,6 +222,61 @@ export function MenuPage() {
     }
     return map;
   }, [cartLines]);
+  const latestLineByItemId = useMemo(() => {
+    const map = new Map<string, (typeof cartLines)[number]>();
+    // Iterate in order — later entries overwrite earlier, leaving the
+    // map keyed to the most recently added line per itemId.
+    for (const l of cartLines) map.set(l.itemId, l);
+    return map;
+  }, [cartLines]);
+
+  /**
+   * Step the cart count for the given menu item. delta=+1 adds one;
+   * delta=-1 removes one (and removes the line entirely at zero).
+   * Operates on the most recently added line for this itemId so the
+   * stepper preserves whatever modifier combo was last configured.
+   *
+   * For brand-new items (count = 0) called with delta=+1, we go
+   * through the regular add path: items with no modifier groups
+   * quick-add; items with options open the customizer.
+   */
+  const stepCart = (item: MenuItem, delta: 1 | -1) => {
+    const latest = latestLineByItemId.get(item.id);
+    if (latest) {
+      setQuantity(latest.lineId, latest.quantity + delta);
+      return;
+    }
+    // No existing line — only meaningful for +1.
+    if (delta === 1) {
+      if (item.modifierGroups.length === 0) {
+        addItem(item, []);
+      } else {
+        setOpenItem({ item, mode: "sheet" });
+      }
+    }
+  };
+
+  /**
+   * Grid-tap handler. Items with at least one modifier group open the
+   * customizer sheet (size / mix-in / topping pickers, etc.). Items with
+   * no modifier groups — like bubble teas, which come in one fixed
+   * size + sweetness — are quick-adds: tap goes straight to the cart.
+   * We still fire the fly-to-cart animation from the card's bounding
+   * rect so the customer gets the same feedback they'd see if they'd
+   * gone through the sheet.
+   */
+  const handleGridTap = (
+    item: MenuItem,
+    e: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if (item.modifierGroups.length === 0) {
+      const from = e.currentTarget.getBoundingClientRect();
+      flyToCart({ from });
+      addItem(item, []);
+      return;
+    }
+    setOpenItem({ item, mode: "sheet" });
+  };
 
   // ─── Fetch menu ────────────────────────────────────────────────
   useEffect(() => {
@@ -364,8 +502,14 @@ export function MenuPage() {
                   key={item.id}
                   item={item}
                   inCartCount={cartCountByItemId.get(item.id) ?? 0}
-                  // Grid tap → bottom sheet customizer.
-                  onClick={() => setOpenItem({ item, mode: "sheet" })}
+                  // Items with options → sheet customizer.
+                  // Items with no options → quick-add to cart.
+                  onClick={(e) => handleGridTap(item, e)}
+                  // Stepper edits the most recent cart line for this
+                  // item — preserves whatever modifier config the
+                  // customer last configured.
+                  onIncrement={() => stepCart(item, 1)}
+                  onDecrement={() => stepCart(item, -1)}
                 />
               ))}
             </div>

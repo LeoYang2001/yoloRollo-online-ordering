@@ -24,6 +24,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          {/* Confirmation has two arrival shapes:
+              - /confirmation/:orderId — inline payment path (we pre-
+                created the order so we know its ID).
+              - /confirmation?order_id=… — Clover Hosted Checkout's
+                redirect target after payment. Clover appends the
+                order_id query param. */}
+          <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/confirmation/:orderId" element={<Confirmation />} />
           <Route path="/location" element={<Location />} />
         </Route>
