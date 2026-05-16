@@ -11,13 +11,17 @@ import { Confirmation } from "./pages/Confirmation";
 import { MockCheckout } from "./pages/MockCheckout";
 import { TVDisplay } from "./pages/TVDisplay";
 import { Location } from "./pages/Location";
+import { KdsPage } from "./pages/Kds";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* /tv is intentionally OUTSIDE the App layout — it's fullscreen for the TV */}
+        {/* /tv and /kds are intentionally OUTSIDE the App layout —
+            /tv is fullscreen for the lobby TV, /kds is fullscreen for
+            kitchen tablets with its own dark chrome and PIN gate. */}
         <Route path="/tv" element={<TVDisplay />} />
+        <Route path="/kds" element={<KdsPage />} />
 
         <Route element={<App />}>
           <Route path="/" element={<Welcome />} />

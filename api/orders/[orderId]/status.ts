@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { OrderStatus } from "../../../src/types";
 import { cloverRest, isMockMode } from "../../_clover.js";
+import { firestore } from "../../_firebase.js";
 
 /**
  * GET /api/orders/:orderId/status
@@ -168,7 +169,46 @@ export default async function handler(
       } satisfies OrderStatus);
     }
 
-    // ─── Branch 3: paid — compute queue position + derived state ───
+    // ─── Branch 3a: authoritative Firestore signal from KDS ─────────
+    // When kitchen staff taps "Complete" on the KDS, our Firestore
+    // ticket flips to status="completed". That's the canonical "Ready
+    // for pickup" signal — beats the heuristic time-cap below.
+    try {
+      const snap = await firestore()
+        .collection("tickets")
+        .doc(orderId)
+        .get();
+      if (snap.exists) {
+        const data = snap.data() as { status?: string } | undefined;
+        if (data?.status === "completed") {
+          return res.status(200).json({
+            orderId,
+            ticketNumber: ticketNumber(orderId),
+            state: "ready",
+            updatedAt: new Date().toISOString(),
+          } satisfies OrderStatus);
+        }
+        if (data?.status === "in_progress") {
+          return res.status(200).json({
+            orderId,
+            ticketNumber: ticketNumber(orderId),
+            state: "preparing",
+            updatedAt: new Date().toISOString(),
+          } satisfies OrderStatus);
+        }
+        // status === "queued" → fall through to heuristic so the
+        // customer sees position-based progression while waiting.
+      }
+    } catch (err) {
+      // Firestore down? Carry on with the heuristic — the customer
+      // still gets a reasonable estimate from the queue-position math.
+      console.warn(
+        "[orders/status] firestore read failed:",
+        (err as Error).message,
+      );
+    }
+
+    // ─── Branch 3b: heuristic — queue position + elapsed time ──────
     const myCreatedTime = myOrder.createdTime ?? Date.now();
     const aheadOfMe = allOrders
       .filter((o) => o.paymentState === "PAID")

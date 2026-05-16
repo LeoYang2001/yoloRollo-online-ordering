@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "node:crypto";
+import { FieldValue } from "firebase-admin/firestore";
 import { cloverRest } from "../_clover.js";
+import { firestore, type KdsTicketDoc } from "../_firebase.js";
 
 /**
  * POST /api/clover/hosted-checkout-webhook
@@ -82,6 +84,17 @@ interface CloverPaymentExpanded {
   id: string;
   amount: number;
   order?: { id: string };
+}
+
+/** Shape we read from /v3/merchants/{mid}/orders/{id}?expand=lineItems
+ *  in order to materialize the KDS ticket. */
+interface CloverOrderForKds {
+  id: string;
+  title?: string;
+  total?: number;
+  lineItems?: {
+    elements?: { name?: string; unitQty?: number; note?: string }[];
+  };
 }
 
 type Verdict =
@@ -248,6 +261,62 @@ export default async function handler(
     console.warn(
       "[hosted-webhook] KV not configured; sessionId→orderId not cached " +
         "(lookup will fall back to Path 1/2)",
+    );
+  }
+
+  // ─── Materialize the kitchen ticket in Firestore ──────────────────
+  // The /kds page subscribes to `tickets` where status=queued and
+  // renders one card per doc. We write idempotently (merge:true keyed
+  // on orderId) so re-deliveries of the same webhook are harmless.
+  try {
+    const order = await cloverRest<CloverOrderForKds>(
+      `/orders/${orderId}?expand=lineItems`,
+    );
+
+    // Title is "Online: <customerName>" — strip the prefix for the
+    // KDS card. If title is missing entirely, leave undefined.
+    const customerName = order.title?.startsWith("Online: ")
+      ? order.title.slice("Online: ".length).trim()
+      : order.title?.trim();
+
+    const items =
+      (order.lineItems?.elements ?? []).map((li) => {
+        // Clover stores quantity in per-mille units (1000 = 1 unit).
+        const q = li.unitQty
+          ? Math.max(1, Math.round(li.unitQty / 1000))
+          : 1;
+        return {
+          n: li.name ?? "Item",
+          q,
+          ...(li.note ? { m: li.note } : {}),
+        };
+      }) ?? [];
+
+    const doc: KdsTicketDoc = {
+      orderId,
+      ticketNumber: orderId.slice(-6).toUpperCase(),
+      customerName,
+      items,
+      status: "queued",
+      createdAt: FieldValue.serverTimestamp(),
+      total: typeof order.total === "number" ? order.total / 100 : undefined,
+    };
+
+    await firestore()
+      .collection("tickets")
+      .doc(orderId)
+      .set(doc, { merge: true });
+
+    console.log(`[hosted-webhook] firestore ticket queued: ${orderId}`);
+  } catch (err) {
+    // Don't fail the webhook on a Firestore hiccup — Clover would
+    // retry the whole event, but the orderId↔session mapping is
+    // already in KV and the customer's UI lookup still works. The
+    // KDS would just miss this ticket; staff can catch it from the
+    // Clover dashboard until next deploy.
+    console.error(
+      "[hosted-webhook] firestore write failed (non-fatal):",
+      err,
     );
   }
 
