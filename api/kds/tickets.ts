@@ -65,8 +65,13 @@ export default async function handler(
           ticketNumber: data.ticketNumber,
           customerName: data.customerName,
           items: data.items ?? [],
+          // Narrow to the response union — `as const` keeps the
+          // ternary's literal type instead of letting TS widen to
+          // `string` (which trips the assignability check below).
           status:
-            data.status === "in_progress" ? "in_progress" : "queued",
+            data.status === "in_progress"
+              ? ("in_progress" as const)
+              : ("queued" as const),
           createdAtMs,
           elapsedSec: createdAtMs
             ? Math.floor((now - createdAtMs) / 1000)
