@@ -180,7 +180,14 @@ export default async function handler(
         .get();
       if (snap.exists) {
         const data = snap.data() as { status?: string } | undefined;
-        if (data?.status === "completed") {
+        // Both "completed" (kitchen done, awaiting pickup) and
+        // "picked_up" (already received) read as "ready" on the
+        // customer's confirmation page — once the kitchen is done,
+        // the customer's UI doesn't need to distinguish.
+        if (
+          data?.status === "completed" ||
+          data?.status === "picked_up"
+        ) {
           return res.status(200).json({
             orderId,
             ticketNumber: ticketNumber(orderId),

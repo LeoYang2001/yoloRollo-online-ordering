@@ -86,14 +86,21 @@ interface CloverPaymentExpanded {
   order?: { id: string };
 }
 
-/** Shape we read from /v3/merchants/{mid}/orders/{id}?expand=lineItems
- *  in order to materialize the KDS ticket. */
+/** Shape we read from /v3/merchants/{mid}/orders/{id}?expand=lineItems.modifications
+ *  in order to materialize the KDS ticket. The `modifications` expand
+ *  is what surfaces each modifier the customer chose (mix-in, topping,
+ *  boba, etc.) so kitchen staff sees what to actually make. */
 interface CloverOrderForKds {
   id: string;
   title?: string;
   total?: number;
   lineItems?: {
-    elements?: { name?: string; unitQty?: number; note?: string }[];
+    elements?: {
+      name?: string;
+      unitQty?: number;
+      note?: string;
+      modifications?: { elements?: { name?: string }[] };
+    }[];
   };
 }
 
@@ -270,7 +277,7 @@ export default async function handler(
   // on orderId) so re-deliveries of the same webhook are harmless.
   try {
     const order = await cloverRest<CloverOrderForKds>(
-      `/orders/${orderId}?expand=lineItems`,
+      `/orders/${orderId}?expand=lineItems.modifications`,
     );
 
     // Title is "Online: <customerName>" — strip the prefix for the
@@ -285,10 +292,20 @@ export default async function handler(
         const q = li.unitQty
           ? Math.max(1, Math.round(li.unitQty / 1000))
           : 1;
+        // Modifier names from the customer's customizer selections.
+        // Falls back to li.note (which our Hosted Checkout flow uses
+        // to encode modifiers when creating the cart on Clover).
+        const modNames = (li.modifications?.elements ?? [])
+          .map((m) => m.name?.trim())
+          .filter(Boolean) as string[];
+        const m =
+          modNames.length > 0
+            ? modNames.join(", ")
+            : li.note?.trim() || undefined;
         return {
           n: li.name ?? "Item",
           q,
-          ...(li.note ? { m: li.note } : {}),
+          ...(m ? { m } : {}),
         };
       }) ?? [];
 

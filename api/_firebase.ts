@@ -67,14 +67,20 @@ export interface KdsTicketDoc {
   customerName?: string;
   /** Line items, each `{n, q, m}` where n=name, q=qty, m=modifiers. */
   items: { n: string; q: number; m?: string }[];
-  /** "queued" right after payment; "in_progress" once staff taps Start
-   *  (we leave room for that even if we don't expose Start yet);
-   *  "completed" once Done. */
-  status: "queued" | "in_progress" | "completed";
+  /** Ticket lifecycle:
+   *    queued       → just paid, sitting in the kitchen line
+   *    in_progress  → staff started preparing (reserved; not exposed yet)
+   *    completed    → kitchen done, customer can pick up (shown on TV)
+   *    picked_up    → customer received the order; archived, off all boards
+   */
+  status: "queued" | "in_progress" | "completed" | "picked_up";
   /** Set with FieldValue.serverTimestamp() on write; read as a
    *  Firestore Timestamp (has .toMillis()). */
   createdAt: unknown;
+  /** When status flipped to completed. */
   completedAt?: unknown;
+  /** When status flipped to picked_up. */
+  pickedUpAt?: unknown;
   /** Total in dollars — useful for receipt diagnostics. */
   total?: number;
 }

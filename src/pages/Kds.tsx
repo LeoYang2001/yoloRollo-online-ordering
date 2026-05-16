@@ -19,11 +19,14 @@ interface Ticket {
   ticketNumber: string;
   customerName?: string;
   items: { n: string; q: number; m?: string }[];
-  status: "queued" | "in_progress";
+  status: "queued" | "in_progress" | "completed";
   createdAtMs: number;
+  completedAtMs?: number;
   elapsedSec: number;
   total?: number;
 }
+
+type Action = "complete" | "dismiss" | "recall";
 
 const TOKEN_KEY = "yolo-rollo-kds-token";
 const POLL_MS = 2_000;
@@ -139,7 +142,11 @@ function Board({
 }) {
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [completing, setCompleting] = useState<Set<string>>(new Set());
+  // Tracks which orderIds have an in-flight transition request, so we
+  // can disable their buttons until the server responds. Keyed by
+  // orderId — same set for all action types since only one button on
+  // a card is pressable at a time.
+  const [pending, setPending] = useState<Set<string>>(new Set());
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -168,16 +175,24 @@ function Board({
     return () => clearInterval(id);
   }, [fetchTickets]);
 
-  const complete = async (orderId: string) => {
-    setCompleting((s) => new Set(s).add(orderId));
+  /**
+   * Issue a state-machine transition for a ticket.
+   *   complete  any        → completed (kitchen done, awaiting pickup)
+   *   dismiss   completed  → picked_up (customer received; ticket gone)
+   *   recall    completed  → queued    (back to the line)
+   *   recall    picked_up  → completed (un-archive)
+   * Updates local state optimistically; the next poll reconciles.
+   */
+  const transition = async (orderId: string, action: Action) => {
+    setPending((s) => new Set(s).add(orderId));
     try {
-      const r = await fetch("/api/kds/complete", {
+      const r = await fetch("/api/kds/transition", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ orderId, action }),
       });
       if (r.status === 401) {
         onAuthExpired();
@@ -187,13 +202,35 @@ function Board({
         const data = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? `HTTP ${r.status}`);
       }
-      // Optimistic: drop from local state immediately, the next poll
-      // will reconcile if anything went wrong server-side.
-      setTickets((prev) => prev?.filter((t) => t.orderId !== orderId) ?? null);
+      const data = (await r.json()) as {
+        status: "queued" | "in_progress" | "completed" | "picked_up";
+      };
+      // Optimistic local update so the card moves panels instantly.
+      setTickets((prev) => {
+        if (!prev) return prev;
+        if (data.status === "picked_up") {
+          // Disappears off the board entirely (KDS doesn't show picked_up).
+          return prev.filter((t) => t.orderId !== orderId);
+        }
+        return prev.map((t) =>
+          t.orderId === orderId
+            ? {
+                ...t,
+                status: data.status as Ticket["status"],
+                ...(data.status === "completed"
+                  ? { completedAtMs: Date.now() }
+                  : {}),
+                ...(action === "recall" && data.status === "queued"
+                  ? { completedAtMs: undefined }
+                  : {}),
+              }
+            : t,
+        );
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setCompleting((s) => {
+      setPending((s) => {
         const next = new Set(s);
         next.delete(orderId);
         return next;
@@ -201,18 +238,28 @@ function Board({
     }
   };
 
-  // Compute "live" elapsed seconds without re-fetching by combining
-  // each ticket's server-given createdAtMs with the per-second tick
-  // counter that's already incrementing in the parent component.
-  const enriched = useMemo(() => {
+  // Compute "live" elapsed seconds + split into Queue vs Ready panels.
+  // Done in one memo so the per-second ticker only triggers one
+  // recompute, not separate ones per derived array.
+  const { queue, ready } = useMemo(() => {
     void tick; // dependency on the ticker
     const now = Date.now();
-    return (tickets ?? []).map((t) => ({
+    const enriched = (tickets ?? []).map((t) => ({
       ...t,
       liveElapsedSec: t.createdAtMs
         ? Math.max(0, Math.floor((now - t.createdAtMs) / 1000))
         : t.elapsedSec,
     }));
+    // Queue panel — oldest first (FIFO prep order)
+    const queue = enriched
+      .filter((t) => t.status === "queued" || t.status === "in_progress")
+      .sort((a, b) => a.createdAtMs - b.createdAtMs);
+    // Ready panel — newest first (most recently completed at the top
+    // so staff sees fresh-out-the-kitchen tickets immediately)
+    const ready = enriched
+      .filter((t) => t.status === "completed")
+      .sort((a, b) => (b.completedAtMs ?? 0) - (a.completedAtMs ?? 0));
+    return { queue, ready };
   }, [tickets, tick]);
 
   return (
@@ -222,7 +269,9 @@ function Board({
           Kitchen Queue
         </div>
         <div className="flex items-center gap-3 text-sm text-zinc-400">
-          <span>{enriched.length} active</span>
+          <span>
+            {queue.length} active · {ready.length} ready
+          </span>
           <button
             type="button"
             onClick={onAuthExpired}
@@ -241,21 +290,71 @@ function Board({
 
       {tickets === null && !error ? (
         <div className="px-2 py-8 text-zinc-500">Loading…</div>
-      ) : enriched.length === 0 ? (
-        <div className="px-2 py-8 text-2xl font-display text-zinc-600">
-          No active tickets.
-        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {enriched.map((t) => (
-            <TicketCard
-              key={t.orderId}
-              ticket={t}
-              completing={completing.has(t.orderId)}
-              onComplete={() => complete(t.orderId)}
-            />
-          ))}
-        </div>
+        <>
+          {/* ── In Queue ─────────────────────────────────────── */}
+          <SectionHeader
+            label="In queue"
+            count={queue.length}
+            empty="No active tickets."
+          />
+          {queue.length > 0 && (
+            <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {queue.map((t) => (
+                <TicketCard
+                  key={t.orderId}
+                  ticket={t}
+                  pending={pending.has(t.orderId)}
+                  onAction={(a) => transition(t.orderId, a)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* ── Ready for Pickup ─────────────────────────────── */}
+          <SectionHeader
+            label="Ready for pickup"
+            count={ready.length}
+            empty="No orders waiting on pickup."
+          />
+          {ready.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {ready.map((t) => (
+                <TicketCard
+                  key={t.orderId}
+                  ticket={t}
+                  pending={pending.has(t.orderId)}
+                  onAction={(a) => transition(t.orderId, a)}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Section header ───────────────────────────────────────────────
+function SectionHeader({
+  label,
+  count,
+  empty,
+}: {
+  label: string;
+  count: number;
+  empty: string;
+}) {
+  return (
+    <div className="mb-2 mt-1 flex items-baseline justify-between px-2">
+      <div className="font-display text-xl font-bold uppercase tracking-wider text-zinc-300">
+        {label}
+        <span className="ml-2 text-sm font-normal tracking-normal text-zinc-500">
+          {count > 0 ? `(${count})` : ""}
+        </span>
+      </div>
+      {count === 0 && (
+        <div className="text-sm italic text-zinc-600">{empty}</div>
       )}
     </div>
   );
@@ -264,17 +363,21 @@ function Board({
 // ─── Single ticket card ─────────────────────────────────────────────
 function TicketCard({
   ticket,
-  completing,
-  onComplete,
+  pending,
+  onAction,
 }: {
   ticket: Ticket & { liveElapsedSec: number };
-  completing: boolean;
-  onComplete: () => void;
+  pending: boolean;
+  onAction: (action: Action) => void;
 }) {
+  const isReady = ticket.status === "completed";
+
   // Color band changes from green → yellow → red as the order ages,
-  // so a busy kitchen can prioritize visually.
-  const ageBand =
-    ticket.liveElapsedSec < 90
+  // so a busy kitchen can prioritize visually. Ready-state cards use
+  // a flat pink band so they're visually distinct from the queue.
+  const ageBand = isReady
+    ? "bg-rollo-pink"
+    : ticket.liveElapsedSec < 90
       ? "bg-emerald-500"
       : ticket.liveElapsedSec < 180
         ? "bg-amber-500"
@@ -300,7 +403,7 @@ function TicketCard({
               {formatElapsed(ticket.liveElapsedSec)}
             </div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-              elapsed
+              {isReady ? "ready" : "elapsed"}
             </div>
           </div>
         </div>
@@ -323,14 +426,41 @@ function TicketCard({
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={onComplete}
-          disabled={completing}
-          className="mt-4 w-full rounded-xl bg-emerald-600 py-3 font-display text-base font-extrabold uppercase tracking-wider text-white transition active:scale-[0.98] disabled:opacity-50"
-        >
-          {completing ? "Completing…" : "Complete"}
-        </button>
+        {/* Action buttons depend on the ticket's lifecycle stage.
+            Queued/in-progress → single Complete button.
+            Completed (Ready for Pickup) → Dismiss (customer received)
+            + Recall (move back to the kitchen queue if completed too
+            early). Both lifecycle stages share the same `pending` lock
+            so double-taps can't fire two transitions in flight. */}
+        {isReady ? (
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => onAction("recall")}
+              disabled={pending}
+              className="flex-1 rounded-xl bg-zinc-800 py-3 font-display text-sm font-extrabold uppercase tracking-wider text-zinc-200 transition active:scale-[0.98] disabled:opacity-50"
+            >
+              ↺ Recall
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction("dismiss")}
+              disabled={pending}
+              className="flex-[2] rounded-xl bg-rollo-pink py-3 font-display text-base font-extrabold uppercase tracking-wider text-white transition active:scale-[0.98] disabled:opacity-50"
+            >
+              {pending ? "Working…" : "Picked up"}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onAction("complete")}
+            disabled={pending}
+            className="mt-4 w-full rounded-xl bg-emerald-600 py-3 font-display text-base font-extrabold uppercase tracking-wider text-white transition active:scale-[0.98] disabled:opacity-50"
+          >
+            {pending ? "Completing…" : "Complete"}
+          </button>
+        )}
       </div>
     </div>
   );

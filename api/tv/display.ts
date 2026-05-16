@@ -27,7 +27,13 @@ import { syncCloverToFirestore } from "../_kds-sync.js";
 
 const PREPARING_CAP = 6;
 const READY_CAP = 6;
-const READY_WINDOW_MS = 5 * 60 * 1000;
+/**
+ * Cap how stale a "ready" ticket can be before we stop showing it on
+ * the TV. With explicit Dismiss in the KDS the staff now controls when
+ * a ticket leaves the board — but if they forget, this acts as a
+ * safety net. Generous (30 min) since dismiss is the canonical exit.
+ */
+const READY_WINDOW_MS = 30 * 60 * 1000;
 const CACHE_TTL_MS = 2_000;
 
 interface TvTicket {

@@ -41,15 +41,25 @@ const SYNC_TTL_MS = 5_000;
  */
 const LOOKBACK_MS = 60 * 60 * 1000;
 
+interface CloverLineItem {
+  name?: string;
+  unitQty?: number;
+  note?: string;
+  /** Populated when the Clover query includes
+   *  `expand=lineItems.modifications`. Each modification is one
+   *  modifier the customer (or cashier) selected. */
+  modifications?: {
+    elements?: { name?: string }[];
+  };
+}
+
 interface CloverOrder {
   id: string;
   title?: string;
   total?: number;
   paymentState?: string;
   createdTime?: number;
-  lineItems?: {
-    elements?: { name?: string; unitQty?: number; note?: string }[];
-  };
+  lineItems?: { elements?: CloverLineItem[] };
 }
 
 export interface SyncResult {
@@ -104,11 +114,12 @@ async function doSync(): Promise<SyncResult> {
     // CRITICAL: `expand=payments` is required. Without it the orders
     // list returns a stale `paymentState: "OPEN"` for every order
     // regardless of whether payment actually succeeded. The same gotcha
-    // bit /api/orders/[orderId]/status.ts. We have to expand payments
-    // to force Clover to compute the real paymentState. (lineItems is
-    // needed by buildDoc to populate the ticket card.)
+    // bit /api/orders/[orderId]/status.ts. `lineItems.modifications`
+    // pulls each modifier (mix-ins / toppings / boba / etc.) so the
+    // KDS card can show what the customer ordered, not just the base
+    // item name.
     data = await cloverRest<{ elements?: CloverOrder[] }>(
-      `/orders?expand=lineItems,payments&${filter}&limit=100`,
+      `/orders?expand=lineItems.modifications,payments&${filter}&limit=100`,
     );
   } catch (err) {
     const result: SyncResult = {
@@ -138,12 +149,32 @@ async function doSync(): Promise<SyncResult> {
     paid.map(async (order) => {
       const docRef = db.collection("tickets").doc(order.id);
       const existing = await docRef.get();
+      const doc = buildDoc(order);
       if (existing.exists) {
+        // Don't overwrite status/completedAt/createdAt — staff may
+        // have marked it in_progress or completed. But DO refresh
+        // items + customerName + total in case the cashier voided a
+        // line, added a modifier, or renamed the order in Clover. This
+        // also backfills modifications onto tickets that were synced
+        // before we knew to expand `lineItems.modifications`.
         existingSkipped++;
+        try {
+          await docRef.update({
+            items: doc.items,
+            customerName: doc.customerName ?? null,
+            total: doc.total ?? null,
+            ticketNumber: doc.ticketNumber,
+          });
+        } catch (updateErr) {
+          console.warn(
+            `[kds-sync] backfill update failed for ${order.id}:`,
+            (updateErr as Error).message,
+          );
+        }
         return;
       }
       try {
-        await docRef.set(buildDoc(order), { merge: true });
+        await docRef.set(doc, { merge: true });
         addedIds.push(order.id);
       } catch (writeErr) {
         console.warn(
@@ -185,10 +216,24 @@ function buildDoc(order: CloverOrder): KdsTicketDoc {
     const q = li.unitQty
       ? Math.max(1, Math.round(li.unitQty / 1000))
       : 1;
+    // Modifier names — Clover's `modifications.elements` carries the
+    // customer-selected mix-ins, toppings, boba type, size, etc. We
+    // join them with ", " so the KDS card can show
+    //   STRAWBERRY ROLLED ICE CREAM
+    //     ×1 · Oreo, M&M, Chocolate drizzle
+    // Falls back to the line-item `note` (which our Hosted Checkout
+    // flow uses to pass modifiers when the order is first created).
+    const modNames = (li.modifications?.elements ?? [])
+      .map((m) => m.name?.trim())
+      .filter(Boolean) as string[];
+    const m =
+      modNames.length > 0
+        ? modNames.join(", ")
+        : li.note?.trim() || undefined;
     return {
       n: li.name ?? "Item",
       q,
-      ...(li.note ? { m: li.note } : {}),
+      ...(m ? { m } : {}),
     };
   });
 

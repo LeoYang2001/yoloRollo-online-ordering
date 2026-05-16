@@ -27,8 +27,12 @@ interface ResponseTicket {
   ticketNumber: string;
   customerName?: string;
   items: { n: string; q: number; m?: string }[];
-  status: "queued" | "in_progress";
+  /** Includes "completed" so the KDS can render its "Ready for Pickup"
+   *  panel from the same response. The UI splits the array by status. */
+  status: "queued" | "in_progress" | "completed";
   createdAtMs: number;
+  /** When the ticket was marked completed (if applicable). */
+  completedAtMs?: number;
   elapsedSec: number;
   total?: number;
 }
@@ -72,36 +76,49 @@ export default async function handler(
     // requires a Firestore composite index that we'd have to provision
     // separately. We instead sort the small result set (≤50 rows) in
     // JS below, which is plenty fast for a kitchen board.
+    //
+    // Includes "completed" so the KDS UI can populate both its Queue
+    // and Ready-for-Pickup panels from the same response. Picked-up
+    // tickets are excluded (archived).
     const snap = await firestore()
       .collection("tickets")
-      .where("status", "in", ["queued", "in_progress"])
+      .where("status", "in", ["queued", "in_progress", "completed"])
       .limit(50)
       .get();
 
     const now = Date.now();
+    const tsToMs = (v: unknown): number | undefined => {
+      if (
+        v &&
+        typeof v === "object" &&
+        typeof (v as { toMillis?: () => number }).toMillis === "function"
+      ) {
+        return (v as { toMillis: () => number }).toMillis();
+      }
+      return undefined;
+    };
     const tickets: ResponseTicket[] = snap.docs
       .map((d: { data(): unknown }) => {
         const data = d.data() as KdsTicketDoc;
-        // createdAt is a Firestore Timestamp once persisted; in transit
-        // we treat it as having .toMillis().
-        const createdAt = data.createdAt as { toMillis?: () => number } | null;
-        const createdAtMs =
-          createdAt && typeof createdAt.toMillis === "function"
-            ? createdAt.toMillis()
-            : 0;
+        const createdAtMs = tsToMs(data.createdAt) ?? 0;
+        const completedAtMs = tsToMs(data.completedAt);
+        // Map Firestore status → response status. `picked_up` is
+        // filtered out by the where-clause above, so we don't expect
+        // it here, but default to "queued" for safety.
+        const status: ResponseTicket["status"] =
+          data.status === "completed"
+            ? "completed"
+            : data.status === "in_progress"
+              ? "in_progress"
+              : "queued";
         return {
           orderId: data.orderId,
           ticketNumber: data.ticketNumber,
           customerName: data.customerName,
           items: data.items ?? [],
-          // Narrow to the response union — `as const` keeps the
-          // ternary's literal type instead of letting TS widen to
-          // `string` (which trips the assignability check below).
-          status:
-            data.status === "in_progress"
-              ? ("in_progress" as const)
-              : ("queued" as const),
+          status,
           createdAtMs,
+          completedAtMs,
           elapsedSec: createdAtMs
             ? Math.floor((now - createdAtMs) / 1000)
             : 0,
