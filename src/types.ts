@@ -81,15 +81,38 @@ export interface OrderRequest {
   paymentToken?: string;
 }
 
-export interface OrderResponse {
-  orderId: string;            // Clover order ID
-  ticketNumber: string;       // short human-friendly number, e.g. "A-042"
-  checkoutUrl: string;        // Clover Hosted Checkout URL the user is redirected to
-  totals: {
-    subtotal: Money;
-    tax: Money;
-    total: Money;
-  };
+/**
+ * Two-shape response depending on which payment path was taken:
+ *
+ *  - `inline`: the request included a paymentToken, the server charged
+ *    the card via Clover.js + Charges API, and we already have a real
+ *    Clover orderId. checkoutUrl is a same-origin path the client can
+ *    navigate to directly (e.g. "/confirmation/<orderId>").
+ *
+ *  - `hosted`: no paymentToken, so the server created a Hosted Checkout
+ *    session and the client must redirect off-site to Clover. The real
+ *    Clover orderId is unknown until our webhook fires after payment —
+ *    we surface the checkoutSessionId so the post-redirect confirmation
+ *    page can resolve to an orderId via GET /api/checkout-session/[cs].
+ */
+export type OrderResponse =
+  | {
+      kind: "inline";
+      orderId: string;            // Clover order ID
+      ticketNumber: string;       // short human-friendly number, e.g. "R-042"
+      checkoutUrl: string;        // same-origin path, e.g. "/confirmation/<orderId>"
+      totals: { subtotal: Money; tax: Money; total: Money };
+    }
+  | {
+      kind: "hosted";
+      checkoutSessionId: string;  // opaque Clover Hosted Checkout session UUID
+      checkoutUrl: string;        // off-site Clover Hosted Checkout URL
+      totals: { subtotal: Money; tax: Money; total: Money };
+    };
+
+/** GET /api/checkout-session/[cs] response. */
+export interface SessionLookupResponse {
+  orderId: string;
 }
 
 export interface OrderStatus {

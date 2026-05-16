@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { api } from "../lib/api";
@@ -12,41 +12,28 @@ import { Icon } from "../components/ui/Icon";
 /**
  * Confirmation — post-payment ticket screen.
  *
- *   ORDER CONFIRMED · TUE, MAY 12
- *   Thanks!
- *   It's rolling.            ← second line in pink
+ * Two entry shapes:
+ *   - /confirmation/<orderId>  — Inline charge path; orderId is in the
+ *                                URL and we go straight to polling status.
+ *   - /confirmation            — Hosted Checkout path; Clover redirected
+ *                                us back with no orderId. We read the
+ *                                checkoutSessionId from sessionStorage
+ *                                and poll /api/checkout-session/[cs]
+ *                                until our webhook has populated KV.
  *
- *   ┌─ Hot-pink ticket card ─────────────────┐
- *   │  YOUR TICKET     [PAYMENT CAPTURED]    │
- *   │                                        │
- *   │            A-247                       │
- *   │   Watch the in-store screen…           │
- *   │ — — — — — — — — — — — — — — —         │  ← perforation
- *   │  PICKUP                  ETA           │
- *   │  Wolfchase Galleria      ~8 min        │
- *   └────────────────────────────────────────┘
- *
- *   ┌─ STATUS ────────────────────────────────┐
- *   │  ✓ Paid                                 │
- *   │  ✓ Rolling now      (active)            │
- *   │  ○ Ready for pickup                     │
- *   └─────────────────────────────────────────┘
- *
- *   [ Order again ]
- *    Back to start
- *
- * Polls /api/orders/:orderId/status every 5s while mounted.
- * On mount, clears the cart so the next visit starts fresh.
+ * During the Hosted Checkout lookup window (typically 1-5s while we
+ * wait for Clover's PAYMENT webhook to land), we render a
+ * "Looking up your ticket…" state — ticket area blank, status steps
+ * greyed out — and switch to the normal view as soon as the lookup
+ * resolves.
  */
 
-/** UI ladder used by the Status card. */
 const STEPS = [
   { key: "paid", label: "Paid" },
   { key: "preparing", label: "Rolling now" },
   { key: "ready", label: "Ready for pickup" },
 ] as const;
 
-/** Map server state → which step index is "active". */
 function stepIndexFor(state: OrderStatus["state"] | undefined): number {
   switch (state) {
     case "paid":
@@ -57,52 +44,164 @@ function stepIndexFor(state: OrderStatus["state"] | undefined): number {
     case "completed":
       return 2;
     default:
-      // pending_payment / cancelled / undefined → nothing checked yet
       return -1;
   }
 }
 
+/**
+ * Phases of the orderId-resolution state machine:
+ *   ready   — we know the orderId; status polling drives the UI
+ *   looking — we have a checkoutSessionId, polling lookup for orderId
+ *   failed  — lookup timed out or errored; ask user to show the cs at counter
+ *   missing — no orderId AND no checkoutSessionId; user likely hit /confirmation
+ *             directly, or sessionStorage was cleared between checkout and now
+ */
+type Resolution =
+  | { phase: "ready"; orderId: string }
+  | { phase: "looking"; cs: string }
+  | { phase: "failed"; cs: string; reason: string }
+  | { phase: "missing" };
+
+/** Polling cadence for the session->order lookup. */
+const LOOKUP_DELAYS_MS = [
+  0, 700, 1_500, 2_500, 4_000, 6_000, 8_000, 10_000, 12_000,
+];
+
+function initialResolution(paramOrderId: string): Resolution {
+  if (paramOrderId) return { phase: "ready", orderId: paramOrderId };
+  if (typeof window === "undefined") return { phase: "missing" };
+  const cs = window.sessionStorage.getItem("yolo-rollo-checkout-session");
+  if (cs) return { phase: "looking", cs };
+  return { phase: "missing" };
+}
+
 export function Confirmation() {
-  const { orderId = "" } = useParams();
+  const { orderId: paramOrderId = "" } = useParams();
   const navigate = useNavigate();
   const clearCart = useCart((s) => s.clear);
-  const [status, setStatus] = useState<OrderStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  // Once we land here, payment has succeeded — empty the cart so the
-  // next visit starts fresh.
+  const [resolution, setResolution] = useState<Resolution>(() =>
+    initialResolution(paramOrderId),
+  );
+  const [status, setStatus] = useState<OrderStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  // Payment succeeded the moment Clover redirected us here. Empty the
+  // cart so a new visit starts fresh.
   useEffect(() => {
     clearCart();
   }, [clearCart]);
 
-  // Poll status every 5s.
+  // Phase: looking → poll the session->order lookup endpoint until it
+  // resolves to an orderId, or we exhaust the backoff schedule.
+  const attemptRef = useRef(0);
   useEffect(() => {
-    if (!orderId) return;
-    let stop = false;
+    if (resolution.phase !== "looking") return;
+    const cs = resolution.cs;
+    attemptRef.current = 0;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        const result = await api.lookupCheckoutSession(cs);
+        if (stopped) return;
+        if (result?.orderId) {
+          // Got it. Clear the stash so a refresh/back doesn't try to
+          // re-resolve a now-known order.
+          window.sessionStorage.removeItem("yolo-rollo-checkout-session");
+          setResolution({ phase: "ready", orderId: result.orderId });
+          return;
+        }
+      } catch (err) {
+        if (stopped) return;
+        setResolution({
+          phase: "failed",
+          cs,
+          reason: (err as Error).message,
+        });
+        return;
+      }
+
+      const next = attemptRef.current + 1;
+      if (next >= LOOKUP_DELAYS_MS.length) {
+        setResolution({
+          phase: "failed",
+          cs,
+          reason: "timed out",
+        });
+        return;
+      }
+      attemptRef.current = next;
+      timer = setTimeout(tick, LOOKUP_DELAYS_MS[next]);
+    };
+
+    timer = setTimeout(tick, LOOKUP_DELAYS_MS[0]);
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [resolution]);
+
+  // Phase: ready → poll order status every 5s.
+  useEffect(() => {
+    if (resolution.phase !== "ready") return;
+    const orderId = resolution.orderId;
+    let stopped = false;
     const poll = async () => {
       try {
         const s = await api.getOrderStatus(orderId);
-        if (!stop) setStatus(s);
+        if (!stopped) setStatus(s);
       } catch (e) {
-        if (!stop) setError((e as Error).message);
+        if (!stopped) setStatusError((e as Error).message);
       }
     };
     poll();
     const id = setInterval(poll, 5_000);
     return () => {
-      stop = true;
+      stopped = true;
       clearInterval(id);
     };
-  }, [orderId]);
+  }, [resolution]);
 
-  const ticket = status?.ticketNumber ?? "A-——";
-  const activeIdx = stepIndexFor(status?.state);
+  // Derived UI bits.
+  const fallbackTicket = useMemo(() => {
+    if (resolution.phase !== "ready") return null;
+    return `R-${resolution.orderId.slice(-4).toUpperCase()}`;
+  }, [resolution]);
+
+  const ticket =
+    resolution.phase === "ready"
+      ? (status?.ticketNumber ?? fallbackTicket ?? "R-——")
+      : "—";
+
+  const activeIdx =
+    resolution.phase === "ready" ? stepIndexFor(status?.state) : -1;
 
   const dateLine = new Date().toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
   });
+
+  const stickerLabel =
+    resolution.phase === "ready"
+      ? "PAYMENT CAPTURED"
+      : resolution.phase === "looking"
+        ? "FINDING TICKET…"
+        : resolution.phase === "failed"
+          ? "SHOW THIS AT COUNTER"
+          : "NO ORDER FOUND";
+
+  const subtitle =
+    resolution.phase === "ready"
+      ? "Watch the in-store screen for this number."
+      : resolution.phase === "looking"
+        ? "Just a moment — finalizing your ticket…"
+        : resolution.phase === "failed"
+          ? `Show this code: ${resolution.cs.slice(0, 8)}…`
+          : "We couldn't find your order in this browser.";
 
   return (
     <motion.div
@@ -147,15 +246,19 @@ export function Confirmation() {
             YOUR TICKET
           </Mono>
           <Sticker size="sm" bg="rgba(255,255,255,0.22)" fg="#fff">
-            PAYMENT CAPTURED
+            {stickerLabel}
           </Sticker>
         </div>
 
         <div className="relative mt-3 text-center font-display text-[88px] font-extrabold leading-[0.9] tracking-[-0.04em] text-white">
-          {ticket}
+          {resolution.phase === "looking" ? (
+            <span className="inline-block animate-pulse text-white/60">—</span>
+          ) : (
+            ticket
+          )}
         </div>
         <div className="relative mt-2 text-center font-body text-sm text-white/90">
-          Watch the in-store screen for this number.
+          {subtitle}
         </div>
 
         <div className="relative mt-6 flex items-center justify-between gap-3">
@@ -215,9 +318,24 @@ export function Confirmation() {
         </div>
       </div>
 
-      {error && (
+      {resolution.phase === "failed" && (
         <p className="mt-3 text-xs text-rollo-pink">
-          Status check failed: {error}
+          We couldn’t look up your order ({resolution.reason}). Your
+          payment went through — show the code above to the counter
+          and we’ll find your ticket.
+        </p>
+      )}
+
+      {resolution.phase === "missing" && (
+        <p className="mt-3 text-xs text-rollo-pink">
+          Open the confirmation in the same browser you paid in, or
+          show your card receipt at the counter.
+        </p>
+      )}
+
+      {statusError && resolution.phase === "ready" && (
+        <p className="mt-3 text-xs text-rollo-pink">
+          Status check failed: {statusError}
         </p>
       )}
 

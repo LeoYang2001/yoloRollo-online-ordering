@@ -84,7 +84,19 @@ export function Checkout() {
         customerEmail: email.trim() || undefined,
         lines,
       });
-      sessionStorage.setItem("yolo-rollo-pending-order", order.orderId);
+
+      if (order.kind === "hosted") {
+        // Hosted Checkout: stash the sessionId so Confirmation.tsx
+        // can resolve it to the real orderId post-redirect (via the
+        // session->order mapping our webhook writes to KV). The
+        // Clover redirect URL doesn't carry the sessionId — Clover
+        // uses our success URL verbatim with no placeholder
+        // substitution — so sessionStorage is the handoff.
+        sessionStorage.setItem(
+          "yolo-rollo-checkout-session",
+          order.checkoutSessionId,
+        );
+      }
       window.location.href = order.checkoutUrl;
     } catch (err) {
       setError((err as Error).message ?? "Could not start payment.");

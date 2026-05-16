@@ -24,7 +24,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          {/* Inline-charge path lands here with the orderId already known. */}
           <Route path="/confirmation/:orderId" element={<Confirmation />} />
+          {/* Hosted Checkout redirect lands here; sessionId is in
+              sessionStorage and gets resolved to an orderId via
+              /api/checkout-session/[cs]. */}
+          <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/location" element={<Location />} />
         </Route>
       </Routes>

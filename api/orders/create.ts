@@ -10,14 +10,29 @@ import {
 /**
  * POST /api/orders/create
  *
- *   1. Create a Clover order in `open` state with the cart line items.
- *   2. Add modifiers as line modifications so they print on the kitchen
- *      ticket.
- *   3. Create a Clover Hosted Checkout session for the order so the
- *      customer can pay with card / Apple Pay / Google Pay on Clover's
- *      hosted page.
- *   4. Return the orderId, a short ticket number, and the checkoutUrl
- *      the client should redirect to.
+ * Two divergent flows depending on whether the client included a
+ * `paymentToken`:
+ *
+ *   - Inline (paymentToken present) — Clover.js / Apple Pay / Google Pay
+ *     produced a card token on the client. We:
+ *       1. Pre-create a Clover order shell + line items.
+ *       2. Charge the token via the Ecommerce Charges API.
+ *       3. Tag the order PAID.
+ *     We end up holding a real Clover orderId, so the response carries
+ *     `kind:"inline"` with `orderId` and the client navigates same-origin
+ *     to `/confirmation/<orderId>`.
+ *
+ *   - Hosted (no paymentToken) — customer is redirected to Clover's
+ *     hosted page. Clover creates its own order at payment time;
+ *     /invoicingcheckoutservice/v1/checkouts has NO field to attach a
+ *     session to a pre-existing order, so any shell we create here
+ *     would be a forever-unpaid orphan. We skip the pre-create and:
+ *       1. Create a Hosted Checkout session with the cart.
+ *       2. Return `kind:"hosted"` with `checkoutSessionId` + the Clover
+ *          redirect URL.
+ *     The post-redirect confirmation page resolves the sessionId to a
+ *     real orderId via GET /api/checkout-session/[cs], which reads a
+ *     mapping populated by api/webhooks/clover.ts on the PAYMENT event.
  *
  * Clover Hosted Checkout REQUIRES HTTPS redirect URLs. On localhost the
  * resolved base URL is http://, so we either:
@@ -61,6 +76,7 @@ export default async function handler(
   if (isMockMode()) {
     const fakeId = `mock_${Date.now()}`;
     return res.status(200).json({
+      kind: "inline",
       orderId: fakeId,
       ticketNumber: ticketNumber(fakeId),
       checkoutUrl: `/confirmation/${fakeId}`,
@@ -68,72 +84,66 @@ export default async function handler(
     } satisfies OrderResponse);
   }
 
-  // ─── 1. Create order shell ──────────────────────────────────────────
-  let orderId: string;
-  try {
-    const order = await cloverRest<{ id: string }>("/orders", {
-      method: "POST",
-      body: JSON.stringify({
-        state: "open",
-        title: `Online: ${body.customerName}`,
-        note: body.notes ?? "",
-      }),
-    });
-    orderId = order.id;
-  } catch (err) {
-    console.error("[orders/create] order shell failed:", err);
-    return res.status(500).json({
-      error: `Could not create order: ${(err as Error).message}`,
-    });
-  }
+  // ───────────────────────────────────────────────────────────────────
+  // INLINE PATH — paymentToken present, pre-create + charge + tag PAID
+  // ───────────────────────────────────────────────────────────────────
+  if (body.paymentToken) {
+    let orderId: string;
+    try {
+      const order = await cloverRest<{ id: string }>("/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          state: "open",
+          title: `Online: ${body.customerName}`,
+          note: body.notes ?? "",
+        }),
+      });
+      orderId = order.id;
+    } catch (err) {
+      console.error("[orders/create] order shell failed:", err);
+      return res.status(500).json({
+        error: `Could not create order: ${(err as Error).message}`,
+      });
+    }
 
-  // ─── 2. Add line items + modifications ─────────────────────────────
-  try {
-    for (const line of body.lines) {
-      const li = await cloverRest<{ id: string }>(
-        `/orders/${orderId}/line_items`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            item: { id: line.itemId },
-            price: dollarsToCents(line.unitPrice),
-            unitQty: line.quantity,
-            note: line.notes,
-          }),
-        },
-      );
-
-      for (const mod of line.modifiers) {
-        await cloverRest(
-          `/orders/${orderId}/line_items/${li.id}/modifications`,
+    try {
+      for (const line of body.lines) {
+        const li = await cloverRest<{ id: string }>(
+          `/orders/${orderId}/line_items`,
           {
             method: "POST",
             body: JSON.stringify({
-              modifier: { id: mod.id },
-              amount: dollarsToCents(mod.priceDelta),
-              name: mod.name,
+              item: { id: line.itemId },
+              price: dollarsToCents(line.unitPrice),
+              unitQty: line.quantity,
+              note: line.notes,
             }),
           },
-        ).catch((e) => {
-          console.warn("[orders/create] modification add failed", mod.id, e);
-        });
-      }
-    }
-  } catch (err) {
-    console.error("[orders/create] line items failed:", err);
-    return res.status(500).json({
-      error: `Could not attach line items: ${(err as Error).message}`,
-      orderId,
-    });
-  }
+        );
 
-  // ─── 3a. Inline charge path (Path B) ───────────────────────────────
-  // When the client sends a paymentToken (from Clover.js card form OR
-  // from Apple Pay / Google Pay), we charge directly via the Ecommerce
-  // Charges API and skip Hosted Checkout entirely. This is the path
-  // that fixes the Apple Pay shipping-prompt issue, because we control
-  // the W3C PaymentRequest options on the client (requestShipping:false).
-  if (body.paymentToken) {
+        for (const mod of line.modifiers) {
+          await cloverRest(
+            `/orders/${orderId}/line_items/${li.id}/modifications`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                modifier: { id: mod.id },
+                amount: dollarsToCents(mod.priceDelta),
+                name: mod.name,
+              }),
+            },
+          ).catch((e) => {
+            console.warn("[orders/create] modification add failed", mod.id, e);
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[orders/create] line items failed:", err);
+      return res.status(500).json({
+        error: `Could not attach line items: ${(err as Error).message}`,
+      });
+    }
+
     try {
       const charge = await cloverCharge({
         source: body.paymentToken,
@@ -145,12 +155,11 @@ export default async function handler(
       if (charge.status !== "succeeded" || !charge.paid) {
         return res.status(402).json({
           error: `Payment ${charge.status}. Please try a different card.`,
-          orderId,
         });
       }
-      // Tag the order so it shows as PAID in Clover Dashboard. We do
-      // this best-effort — even if it fails, the money already moved
-      // and the kitchen can pull the ticket up by ID.
+      // Tag the order so it shows as PAID in Clover Dashboard. Best-effort —
+      // even if it fails, the money already moved and the kitchen can pull
+      // the ticket up by ID.
       await cloverRest(`/orders/${orderId}`, {
         method: "POST",
         body: JSON.stringify({
@@ -164,10 +173,9 @@ export default async function handler(
       });
 
       return res.status(200).json({
+        kind: "inline",
         orderId,
         ticketNumber: ticketNumber(orderId),
-        // Empty checkoutUrl signals to the client: no redirect needed,
-        // payment is already done — just navigate to /confirmation.
         checkoutUrl: `/confirmation/${orderId}`,
         totals: { subtotal, tax, total },
       } satisfies OrderResponse);
@@ -175,16 +183,13 @@ export default async function handler(
       console.error("[orders/create] inline charge failed:", err);
       return res.status(500).json({
         error: `Could not charge card: ${(err as Error).message}`,
-        orderId,
       });
     }
   }
 
-  // ─── 3b. Hosted Checkout fallback ──────────────────────────────────
-  // No paymentToken → customer wants the redirect-to-Clover flow. This
-  // still has the Apple Pay shipping prompt on Clover's hosted page,
-  // but we keep it as a safety net for browsers/devices that can't run
-  // the inline path (very old browsers, no W3C PaymentRequest, etc.).
+  // ───────────────────────────────────────────────────────────────────
+  // HOSTED PATH — no paymentToken, redirect to Clover Hosted Checkout
+  // ───────────────────────────────────────────────────────────────────
   const explicitBase = process.env.CHECKOUT_BASE_URL?.replace(/\/$/, "");
   const forwardedProto = req.headers["x-forwarded-proto"] as
     | string
@@ -200,31 +205,16 @@ export default async function handler(
         "Clover Hosted Checkout requires HTTPS for the redirect URLs but " +
         `the resolved base is "${base}". Options:\n` +
         "  • Deploy to Vercel preview (npx vercel deploy) and test there\n" +
-        "  • Run `npx ngrok http 3000` and set CHECKOUT_BASE_URL=https://<your-tunnel>.ngrok-free.app in .env.local\n" +
-        "Local order shell was still created (orderId below) so you can " +
-        "see it in Clover Dashboard.",
-      orderId,
+        "  • Run `npx ngrok http 3000` and set CHECKOUT_BASE_URL=https://<your-tunnel>.ngrok-free.app in .env.local",
     });
   }
 
-  let checkoutUrl: string;
   try {
     const checkout = await cloverHostedCheckout<{
       href: string;
       checkoutSessionId: string;
     }>(
       {
-        // Clover Hosted Checkout REQUIRES a non-null `customer` block
-        // (returns "Customer can't be null" otherwise). We pass the
-        // minimum that satisfies the API while not triggering Apple Pay's
-        // shipping-contact prompt:
-        //   - firstName / lastName / email are accepted "soft" fields
-        //   - phoneNumber is OMITTED — that's the field that tipped Apple
-        //     Pay into requiring requiredShippingContactFields.
-        // (Even with this minimal customer block the Apple Pay shipping
-        // prompt may still appear — that's a Clover-side default we
-        // can't override from the request body. Card payment works fine
-        // either way; Apple Pay UX is the only thing affected.)
         customer: {
           firstName: body.customerName.split(" ")[0] || "Customer",
           lastName: body.customerName.split(" ").slice(1).join(" ") || "",
@@ -241,8 +231,6 @@ export default async function handler(
                 .join(" — ") || undefined,
           })),
         },
-        // Phone goes here so it's preserved on the Clover order without
-        // being passed as a "contact field" Apple Pay must collect.
         merchantMetadata: {
           fulfillment: "pickup",
           source: "yolo-rollo-web",
@@ -252,24 +240,28 @@ export default async function handler(
         },
       },
       {
-        success: `${base}/confirmation/${orderId}`,
+        // Clover uses these URLs verbatim — it does NOT substitute
+        // {order_id} / {checkoutSessionId} placeholders. We can't bake
+        // the sessionId into the URL either, since we don't know it
+        // until this call returns. The client stashes it in
+        // sessionStorage right before redirecting; Confirmation.tsx
+        // reads it back and polls /api/checkout-session/[cs] to
+        // resolve the real orderId once our webhook has populated KV.
+        success: `${base}/confirmation`,
         failure: `${base}/checkout?error=payment_failed`,
       },
     );
-    checkoutUrl = checkout.href;
+
+    return res.status(200).json({
+      kind: "hosted",
+      checkoutSessionId: checkout.checkoutSessionId,
+      checkoutUrl: checkout.href,
+      totals: { subtotal, tax, total },
+    } satisfies OrderResponse);
   } catch (err) {
     console.error("[orders/create] hosted checkout failed:", err);
     return res.status(500).json({
       error: `Could not start payment: ${(err as Error).message}`,
-      orderId,
     });
   }
-
-  // ─── 4. Done. Client redirects browser to checkoutUrl. ──────────────
-  return res.status(200).json({
-    orderId,
-    ticketNumber: ticketNumber(orderId),
-    checkoutUrl,
-    totals: { subtotal, tax, total },
-  } satisfies OrderResponse);
 }
