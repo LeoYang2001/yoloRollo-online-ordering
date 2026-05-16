@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { brand } from "../config/brand";
@@ -120,12 +119,18 @@ export function TVDisplay() {
                 boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
               }}
             >
-              <QRCodeSVG
-                value={url}
-                size={200}
-                level="H"
-                fgColor="#2A1722"
-                bgColor="#FFFFFF"
+              {/* Pre-rendered QR — public/qr-order.png. Swapped from
+                  the runtime QRCodeSVG so the brand version with the
+                  logo overlay can be used without re-generating per
+                  render. Update the file if the destination URL ever
+                  changes. */}
+              <img
+                src="/qr-order.png"
+                alt="Scan to order at yolorollo online"
+                width={200}
+                height={200}
+                draggable={false}
+                className="h-[200px] w-[200px] object-contain"
               />
               <div className="mt-1.5 text-center">
                 <Mono size={10} color="rgba(42,23,34,0.40)">
