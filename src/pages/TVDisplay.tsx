@@ -1,31 +1,82 @@
+import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { brand } from "../config/brand";
 import { Wordmark, Display, Mono, Sticker } from "../components/ui/Typography";
 import { Button } from "../components/ui/Button";
 
 /**
- * In-store TV display. Open in fullscreen (Chrome: F11). Customers in
- * the shop scan the QR to land on the ordering site.
+ * In-store TV display. Open in fullscreen (Chrome: F11).
  *
- *   Hot pink fullscreen bg with decorative blobs in corners.
- *   Top:    "yolo rollo" wordmark (green/white) + "IN-STORE DISPLAY"
- *   Center: "✦ SKIP THE LINE" sticker · "Scan. Order. Roll." (Roll in
- *           butter yellow) · big QR card tilted -2deg
- *   Bottom: "NOW ROLLING / A-041 · A-042" + dark Exit button
+ *   Left column (smaller):  marketing / QR — for customers who haven't
+ *                           ordered yet. "Scan. Order. Roll." with QR
+ *                           and the SKIP THE LINE sticker.
+ *   Right column (bigger):  live ticket board, two stacked stripes:
+ *
+ *     READY FOR PICKUP    — large yellow card, ticket numbers in giant
+ *                           type with the customer's first name beside
+ *                           each. Animates in when a new ticket lands.
+ *
+ *     NOW MAKING          — smaller white card below, lists the queue
+ *                           in FIFO order so customers can guess their
+ *                           position.
+ *
+ * Polls /api/tv/display every 3 seconds. Falls back silently to empty
+ * lists if the endpoint is down — the QR remains visible so people can
+ * still place a new order.
  */
+
+interface TvTicket {
+  ticketNumber: string;
+  customerName?: string;
+  agedSec: number;
+}
+interface TvPayload {
+  preparing: TvTicket[];
+  ready: TvTicket[];
+  asOf: string;
+}
+
+const POLL_MS = 3_000;
+
 export function TVDisplay() {
   const navigate = useNavigate();
   const url = `${brand.publicUrl}/?src=tv`;
+  const [data, setData] = useState<TvPayload>({
+    preparing: [],
+    ready: [],
+    asOf: new Date().toISOString(),
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await fetch("/api/tv/display");
+        if (!r.ok) return;
+        const json = (await r.json()) as TvPayload;
+        if (!cancelled) setData(json);
+      } catch {
+        /* ignore — keep previous state */
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-rollo-pink text-white">
-      {/* Decorative corner blobs — positioned so they never cover text */}
+      {/* Decorative corner blobs */}
       <div className="absolute -right-20 -top-16 h-[260px] w-[260px] rounded-full bg-rollo-rose" />
       <div className="absolute -bottom-24 -left-20 h-[300px] w-[300px] rounded-full bg-rollo-butter opacity-90" />
       <div className="absolute right-[-40px] top-32 h-16 w-16 rounded-full bg-rollo-green" />
 
-      <div className="relative z-10 flex h-full flex-col px-7 pb-10 pt-16">
+      <div className="relative z-10 flex h-full flex-col px-8 pb-8 pt-10">
         {/* Header row */}
         <div className="flex items-center justify-between">
           <Wordmark
@@ -33,63 +84,169 @@ export function TVDisplay() {
             colors={{ yolo: "#A6CE39", rollo: "#FFFFFF", sub: "#FCD86F" }}
           />
           <Mono size={11} color="#fff">
-            IN-STORE DISPLAY
+            IN-STORE DISPLAY · {new Date(data.asOf).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Mono>
         </div>
 
-        {/* Center column */}
-        <div className="flex flex-1 flex-col justify-center">
-          <div className="self-start">
-            <Sticker size="md" bg="#FCD86F" fg="#2A1722">
-              ✦ SKIP THE LINE
-            </Sticker>
+        {/* Two-column main body */}
+        <div className="mt-6 flex flex-1 gap-8">
+          {/* ── Left: scan-to-order marketing ─────────────────────── */}
+          <div className="flex w-[420px] flex-shrink-0 flex-col justify-center">
+            <div className="self-start">
+              <Sticker size="md" bg="#FCD86F" fg="#2A1722">
+                ✦ SKIP THE LINE
+              </Sticker>
+            </div>
+
+            <Display
+              size={56}
+              className="mt-4 text-white"
+              style={{ lineHeight: 0.98 }}
+            >
+              Scan.
+              <br />
+              Order.
+              <br />
+              <span style={{ color: "#FCD86F" }}>Roll.</span>
+            </Display>
+
+            <div
+              className="mt-6 self-start rounded-rollo-card bg-white p-3.5"
+              style={{
+                transform: "rotate(-2deg)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+              }}
+            >
+              <QRCodeSVG
+                value={url}
+                size={200}
+                level="H"
+                fgColor="#2A1722"
+                bgColor="#FFFFFF"
+              />
+              <div className="mt-1.5 text-center">
+                <Mono size={10} color="rgba(42,23,34,0.40)">
+                  {url.replace(/^https?:\/\//, "").toUpperCase()}
+                </Mono>
+              </div>
+            </div>
           </div>
 
-          <Display
-            size={72}
-            className="mt-5 text-white"
-            style={{ lineHeight: 0.98 }}
-          >
-            Scan.
-            <br />
-            Order.
-            <br />
-            <span style={{ color: "#FCD86F" }}>Roll.</span>
-          </Display>
+          {/* ── Right: live ticket board ──────────────────────────── */}
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            {/* Ready for pickup — the high-attention stripe. Yellow
+                background, giant ticket numbers, animated entrance so
+                the eye catches a new arrival. */}
+            <div className="flex flex-1 flex-col overflow-hidden rounded-rollo-card bg-rollo-butter p-6 text-rollo-ink shadow-rollo-rose">
+              <div className="flex items-baseline justify-between">
+                <Display size={32} className="text-rollo-ink">
+                  Ready for pickup
+                </Display>
+                <Mono size={11} color="rgba(42,23,34,0.55)">
+                  COME GRAB IT
+                </Mono>
+              </div>
 
-          {/* QR card */}
-          <div
-            className="mt-7 self-center rounded-rollo-card bg-white p-3.5"
-            style={{
-              transform: "rotate(-2deg)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
-            }}
-          >
-            <QRCodeSVG
-              value={url}
-              size={260}
-              level="H"
-              fgColor="#2A1722"
-              bgColor="#FFFFFF"
-            />
-            <div className="mt-1.5 text-center">
-              <Mono size={10} color="rgba(42,23,34,0.40)">
-                {url.replace(/^https?:\/\//, "").toUpperCase()}
-              </Mono>
+              <div className="mt-4 flex flex-1 flex-wrap content-start gap-3.5 overflow-hidden">
+                <AnimatePresence initial={false}>
+                  {data.ready.length === 0 ? (
+                    <motion.div
+                      key="ready-empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="self-center px-2 text-[16px] text-rollo-ink-soft"
+                    >
+                      No orders ready right now.
+                    </motion.div>
+                  ) : (
+                    data.ready.map((t) => (
+                      <motion.div
+                        key={t.ticketNumber}
+                        layout
+                        initial={{ scale: 0.7, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 320,
+                          damping: 22,
+                        }}
+                        className="flex min-w-[200px] flex-col items-start rounded-rollo-card bg-rollo-card px-4 py-3 shadow-rollo-card"
+                      >
+                        <div className="font-display text-[44px] font-extrabold leading-none tracking-[-0.02em] text-rollo-pink">
+                          #{t.ticketNumber}
+                        </div>
+                        {t.customerName && (
+                          <div className="mt-1 text-[16px] font-bold text-rollo-ink">
+                            {t.customerName}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Now making — lower-attention secondary stripe. White
+                cards with smaller ticket numbers, just so customers
+                can see they're in line. */}
+            <div className="overflow-hidden rounded-rollo-card bg-white/15 p-5 text-white">
+              <div className="flex items-baseline justify-between">
+                <Display size={22} className="text-white">
+                  Now making
+                </Display>
+                <Mono size={10} color="rgba(255,255,255,0.75)">
+                  {data.preparing.length}{" "}
+                  {data.preparing.length === 1 ? "TICKET" : "TICKETS"}
+                </Mono>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2.5">
+                <AnimatePresence initial={false}>
+                  {data.preparing.length === 0 ? (
+                    <motion.div
+                      key="prep-empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[14px] text-white/75"
+                    >
+                      Kitchen's clear. Roll on in!
+                    </motion.div>
+                  ) : (
+                    data.preparing.map((t) => (
+                      <motion.div
+                        key={t.ticketNumber}
+                        layout
+                        initial={{ y: 6, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -6, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-baseline gap-2 rounded-full bg-white/20 px-3.5 py-1.5 font-display text-[18px] font-extrabold tabular-nums backdrop-blur-sm"
+                      >
+                        <span>#{t.ticketNumber}</span>
+                        {t.customerName && (
+                          <span className="text-[12px] font-bold text-white/85">
+                            {t.customerName}
+                          </span>
+                        )}
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom row */}
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <Mono size={10} color="#fff">
-              NOW ROLLING
-            </Mono>
-            <div className="mt-0.5 whitespace-nowrap font-display text-[20px] font-extrabold tracking-[-0.02em] text-white">
-              A-041 · A-042
-            </div>
-          </div>
+        {/* Bottom: exit affordance for staff (right corner so customers
+            don't accidentally hit it) */}
+        <div className="mt-4 flex justify-end">
           <Button variant="dark" size="sm" onClick={() => navigate("/")}>
             ← Exit
           </Button>
