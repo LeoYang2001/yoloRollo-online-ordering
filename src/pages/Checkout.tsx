@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
@@ -7,26 +7,35 @@ import { brand } from "../config/brand";
 import { useQueueEstimate } from "../lib/useQueueEstimate";
 import { Header } from "../components/ui/Layout";
 import { Display, Mono, Sticker } from "../components/ui/Typography";
-import { Button } from "../components/ui/Button";
-import { Icon } from "../components/ui/Icon";
 import { Card } from "../components/ui/Cards";
 import { ReceiptRow } from "../components/ui/CartItem";
+import { CardForm } from "../components/payment/CardForm";
 
 /**
- * Checkout — collect contact info, redirect to Clover Hosted Checkout.
+ * Checkout — collect contact info, then take payment inline via
+ * Clover.js. Decision A: inline-charge is the ONLY payment path. No
+ * Hosted Checkout redirect anymore.
  *
  *   Header  ← back  ·  Checkout
  *   Pickup card    (white, ~8 MIN sticker)
  *   YOUR INFO      Name / Phone / Email
- *   PAYMENT METHOD  PAY badge · Apple Pay / Card · SECURE · CLOVER HOSTED
  *   Order summary  qty × name … price + Subtotal/Tax/Total
- *   [ Pay $X.XX → ]
- *   tiny terms line
+ *   [ Card number ]
+ *   [ Exp ] [ CVV ]
+ *   [ ZIP ]
+ *   [ Pay $X.XX → ]     ← lives inside CardForm
  *
- * Submit POSTs to /api/orders/create WITHOUT a paymentToken — the
- * server falls through to Clover Hosted Checkout and returns the
- * redirect URL. On failure (Clover redirects back with ?error=…),
- * the error banner is surfaced above the form.
+ * Submit flow:
+ *   1. Customer fills name (required) + optional phone/email + card.
+ *   2. CardForm calls clover.createToken() and hands us a token.
+ *   3. We POST to /api/orders/create with that token.
+ *   4. Server pre-creates order, charges the card, marks it PAID, and
+ *      returns the real orderId.
+ *   5. We navigate to /confirmation/<orderId>.
+ *
+ * No sessionStorage handoff needed — the orderId is in the URL the
+ * moment the response comes back, so the Confirmation page polls
+ * status without any lookup dance.
  */
 export function Checkout() {
   const lines = useCart((s) => s.lines);
@@ -38,13 +47,15 @@ export function Checkout() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   // Live wait estimate from /api/queue (computed off paid Clover orders).
   // placed=false since the customer hasn't paid yet — server adds one
   // ticket's prep time to the queue depth.
   const { estimate } = useQueueEstimate({ placed: false });
   const etaMinutes = estimate?.minutes;
 
-  // Surface ?error=… on return-from-Clover.
+  // Surface ?error=… on return-from-anywhere (e.g. a stale link with
+  // ?error=payment_failed from the old Hosted Checkout flow).
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
     const failure = qs.get("error");
@@ -78,10 +89,17 @@ export function Checkout() {
   // forwarded to Clover so they can send the receipt.
   const valid = Boolean(name.trim());
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  /**
+   * Called by CardForm once Clover.js hands us a card token. We turn
+   * around and POST to /api/orders/create with the token — the server
+   * pre-creates the order, charges the card, and returns a real
+   * orderId we can navigate to.
+   */
+  const handlePay = async (token: string) => {
     setError(null);
     if (!valid) {
+      // Defensive — CardForm should already be disabled, but if its
+      // `disabled` prop got bypassed we still need to refuse.
       setError("Please enter your name for the pickup ticket.");
       return;
     }
@@ -92,16 +110,18 @@ export function Checkout() {
         customerPhone: phone.trim() || undefined,
         customerEmail: email.trim() || undefined,
         lines,
+        paymentToken: token,
       });
-      // Stash the customer name so the Confirmation page (after the
-      // Clover redirect) can update the order title to "Online: <name>"
-      // — Clover assigns its own order ID on Hosted Checkout payment
-      // and we need to rename it post-creation.
-      sessionStorage.setItem("yolo-rollo-pending-order", order.orderId);
+      // Stash the customer name so the Confirmation page can rename
+      // the order title to "Online: <name>" via /api/orders/:id/title
+      // — Clover assigns its own ticket label by default and we want
+      // the friendly name on the kitchen printout.
       sessionStorage.setItem("yolo-rollo-customer-name", name.trim());
-      window.location.href = order.checkoutUrl;
+      // checkoutUrl on the inline path is `/confirmation/<orderId>`
+      // (same-origin), so client-side navigation is enough.
+      navigate(order.checkoutUrl);
     } catch (err) {
-      setError((err as Error).message ?? "Could not start payment.");
+      setError((err as Error).message ?? "Could not complete payment.");
       setSubmitting(false);
     }
   };
@@ -115,7 +135,7 @@ export function Checkout() {
     >
       <Header title="Checkout" onBack={() => navigate("/cart")} />
 
-      <form onSubmit={submit} className="px-5">
+      <div className="px-5">
         {/* ─── Pickup card ─── */}
         <Card>
           <div className="flex items-start justify-between gap-2.5">
@@ -143,11 +163,11 @@ export function Checkout() {
           <FieldRow label="Name" hint="for pickup ticket">
             {/*
               This name is ONLY the pickup-ticket label that prints in
-              the kitchen — it's not the cardholder. The Clover Hosted
-              Checkout page will prompt for the actual cardholder name
-              separately. We intentionally use autoComplete="off" + a
-              non-standard input name so iOS Safari doesn't try to
-              autofill this with the saved billing name.
+              the kitchen — it's not the cardholder. The Clover.js card
+              form below collects the cardholder details separately
+              inside its own iframe. We use autoComplete="off" so iOS
+              Safari doesn't try to autofill this with the saved
+              billing name.
             */}
             <input
               required
@@ -226,46 +246,32 @@ export function Checkout() {
           </div>
         )}
 
-        {/*
-          Temporary notice: Apple Pay auto-voids charges on this merchant
-          account even after domain verification + reCAPTCHA disable.
-          Investigation is open with Clover Support (ref charge
-          MJB5ESMAH8WKG). Cards work fine. Remove this banner once Clover
-          enables wallet payments at the risk-underwriting level.
-        */}
-        {/* <div className="mt-4 flex items-start gap-2 rounded-rollo-card border border-rollo-pink-soft bg-rollo-paper-soft px-3 py-2.5">
-          <span
-            aria-hidden
-            className="mt-[1px] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rollo-pink text-[10px] font-bold leading-none text-white"
-          >
-            !
-          </span>
-          <div className="text-[12px] leading-snug text-rollo-ink-soft">
-            <span className="font-bold text-rollo-pink">
-              Apple Pay temporarily unavailable.
-            </span>{" "}
-            Please pay with a card — we’re working on it.
-          </div>
-        </div> */}
+        {/* ─── Inline payment ─── */}
+        <div className="mt-5">
+          <Mono size={10}>PAYMENT</Mono>
+        </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          full
-          disabled={!valid || submitting}
-          className="mt-4"
-        >
-          {submitting ? "Sending you to pay…" : `Pay $${total.toFixed(2)}`}
-          {!submitting && <Icon.arrow />}
-        </Button>
+        {!valid && (
+          <p className="mt-2 text-xs text-rollo-ink-soft">
+            Enter your name above to enable payment.
+          </p>
+        )}
+
+        <div className="mt-2">
+          <CardForm
+            amount={total}
+            onPay={handlePay}
+            disabled={!valid}
+            submitting={submitting}
+          />
+        </div>
 
         <div className="mt-2.5 text-center">
           <Mono size={9} color="rgba(42,23,34,0.40)">
             BY PAYING YOU AGREE TO YOLO ROLLO’S TERMS
           </Mono>
         </div>
-      </form>
+      </div>
     </motion.div>
   );
 }

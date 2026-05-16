@@ -73,12 +73,14 @@ export interface OrderRequest {
   notes?: string;
   lines: CartLine[];
   /**
-   * Card token from Clover.js `clover.createToken()`. When present, the
-   * server uses Clover's Ecommerce Charges API to charge the card and
-   * link the payment to the created order. Omit for pay-at-pickup or
-   * Hosted Checkout flows.
+   * Card token from Clover.js `clover.createToken()` (or wallet payload
+   * via Apple Pay / Google Pay). The server uses Clover's Ecommerce
+   * Charges API to charge the card and link the payment to the
+   * pre-created order. Required — Decision A makes the inline-charge
+   * path the only payment path; the Hosted Checkout fallback has been
+   * removed.
    */
-  paymentToken?: string;
+  paymentToken: string;
 }
 
 export interface OrderResponse {
