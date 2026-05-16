@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { firestore, type KdsTicketDoc } from "../_firebase.js";
-import { syncCloverToFirestore } from "../_kds-sync.js";
+import {
+  syncCloverToFirestore,
+  type SyncResult,
+} from "../_kds-sync.js";
 import { tokenFromRequest, verifyToken } from "./_session.js";
 
 /**
@@ -39,11 +42,11 @@ export default async function handler(
   }
   res.setHeader("Cache-Control", "no-store");
 
-  // Surface any sync error in the response (in addition to logging)
+  // Surface sync diagnostic in the response (in addition to logging)
   // so we can debug from the browser without digging through Vercel
   // logs. The KDS UI ignores `_debug`.
   let debugSyncError: string | undefined;
-  let debugSyncResult: { scanned: number; added: number } | undefined;
+  let debugSyncResult: SyncResult | undefined;
   try {
     // Pull any paid Clover orders that haven't been recorded in
     // Firestore yet (online webhook orders are usually already in;

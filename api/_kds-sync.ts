@@ -52,49 +52,78 @@ interface CloverOrder {
   };
 }
 
-let lastSyncTs = 0;
-let inFlight: Promise<{ scanned: number; added: number }> | null = null;
+export interface SyncResult {
+  /** Was this call served from the in-memory TTL cache (no Clover hit)? */
+  cached: boolean;
+  /** Lookback window in ms — useful for verifying the deploy. */
+  lookbackMs: number;
+  /** Total orders Clover returned in the lookback window. */
+  totalOrders: number;
+  /** Of those, how many had paymentState === "PAID". */
+  paidOrders: number;
+  /** Skipped because the Firestore doc already existed. */
+  existingSkipped: number;
+  /** Newly written to Firestore. */
+  added: number;
+  /** Order ids we wrote (for debugging). Empty in cached results. */
+  addedIds?: string[];
+  /** Error from the Clover/Firestore round-trip, if any. */
+  error?: string;
+}
+
+let lastResult: { ts: number; result: SyncResult } | null = null;
+let inFlight: Promise<SyncResult> | null = null;
 
 /**
  * Run a Clover→Firestore sync. Coalesces concurrent calls — if two
  * requests land within the same TTL window, they share one Clover
- * query. Returns instantly with {0,0} if the cache is fresh.
+ * query and the cached SyncResult.
  */
-export async function syncCloverToFirestore(): Promise<{
-  scanned: number;
-  added: number;
-}> {
+export async function syncCloverToFirestore(): Promise<SyncResult> {
   const now = Date.now();
-  if (now - lastSyncTs < SYNC_TTL_MS) {
-    return { scanned: 0, added: 0 };
+  if (lastResult && now - lastResult.ts < SYNC_TTL_MS) {
+    // Return the cached result with the cached flag flipped on so
+    // the caller can tell this didn't actually hit Clover.
+    return { ...lastResult.result, cached: true };
   }
   if (inFlight) return inFlight;
 
-  inFlight = doSync(now).finally(() => {
+  inFlight = doSync().finally(() => {
     inFlight = null;
   });
   return inFlight;
 }
 
-async function doSync(
-  now: number,
-): Promise<{ scanned: number; added: number }> {
-  // Update the timestamp BEFORE the network call so a slow Clover
-  // doesn't get stampeded by every poll that lands during the window.
-  lastSyncTs = now;
-
+async function doSync(): Promise<SyncResult> {
+  const now = Date.now();
   const since = now - LOOKBACK_MS;
   const filter = `filter=${encodeURIComponent(`createdTime>${since}`)}`;
-  const data = await cloverRest<{ elements?: CloverOrder[] }>(
-    `/orders?expand=lineItems&${filter}&limit=100`,
-  );
 
-  const paid = (data.elements ?? []).filter(
-    (o) => o.paymentState === "PAID",
-  );
+  let data: { elements?: CloverOrder[] };
+  try {
+    data = await cloverRest<{ elements?: CloverOrder[] }>(
+      `/orders?expand=lineItems&${filter}&limit=100`,
+    );
+  } catch (err) {
+    const result: SyncResult = {
+      cached: false,
+      lookbackMs: LOOKBACK_MS,
+      totalOrders: 0,
+      paidOrders: 0,
+      existingSkipped: 0,
+      added: 0,
+      error: `Clover: ${(err as Error).message}`,
+    };
+    lastResult = { ts: now, result };
+    return result;
+  }
+
+  const allOrders = data.elements ?? [];
+  const paid = allOrders.filter((o) => o.paymentState === "PAID");
 
   const db = firestore();
-  let added = 0;
+  let existingSkipped = 0;
+  const addedIds: string[] = [];
 
   // Run the existence checks + writes in parallel — Firestore handles
   // burst writes fine, and serializing here would scale poorly when a
@@ -104,16 +133,32 @@ async function doSync(
       const docRef = db.collection("tickets").doc(order.id);
       const existing = await docRef.get();
       if (existing.exists) {
-        // Don't overwrite. Staff may have marked it completed or
-        // in_progress, and Clover doesn't know about that.
+        existingSkipped++;
         return;
       }
-      await docRef.set(buildDoc(order), { merge: true });
-      added++;
+      try {
+        await docRef.set(buildDoc(order), { merge: true });
+        addedIds.push(order.id);
+      } catch (writeErr) {
+        console.warn(
+          `[kds-sync] write failed for ${order.id}:`,
+          (writeErr as Error).message,
+        );
+      }
     }),
   );
 
-  return { scanned: paid.length, added };
+  const result: SyncResult = {
+    cached: false,
+    lookbackMs: LOOKBACK_MS,
+    totalOrders: allOrders.length,
+    paidOrders: paid.length,
+    existingSkipped,
+    added: addedIds.length,
+    addedIds,
+  };
+  lastResult = { ts: now, result };
+  return result;
 }
 
 /** Translate a Clover order into the KdsTicketDoc shape Firestore stores. */
